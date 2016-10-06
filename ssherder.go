@@ -4,7 +4,8 @@ import (
 
 )
 
-type expectedData struct {
+// Find a better name for this...
+type expectedResData struct {
 	ID int `json:"id"`
 	ChainMissions []struct {
 		Effect string `json:"effect"`
