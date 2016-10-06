@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -34,12 +36,13 @@ func init() {
 // I should think of a better name
 func fillAutoRes(m map[string]string) {
 	// Slice of valid commands used in func messageCreate
-	cmdList = []string{"ourteams", "apoc", "reddit"}
+	cmdList = []string{"ourteams", "apoc", "reddit", "roll"}
 
 	// Command responses
 	m["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	m["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	m["reddit"] = "http://reddit.com/r/soccerspirits"
+	m["roll"] = strconv.Itoa(rand.Intn(100))
 }
 
 func messageSend(s *discordgo.Session, c, m string) {
