@@ -46,6 +46,7 @@ func fillAutoRes(m map[string]string) {
 }
 
 func messageSend(s *discordgo.Session, c, m string) {
+	// fmt.Println("Channel id: ", c)
 	if _, err = s.ChannelMessageSend(c, m); err != nil {
 		// fmt.Println("Error - s.ChannelMessageSend: ", err)
 		panic(err)
@@ -108,7 +109,7 @@ func main() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
-
+	
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
 	// Simple way to keep program running until CTRL-C is pressed.
