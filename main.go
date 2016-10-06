@@ -10,6 +10,7 @@ import (
 // Variables used for command line parameters
 var (
 	autoRes map[string]string
+	cmdList []string
 	Token string
 	BotID string
 	err error
@@ -20,17 +21,22 @@ func init() {
 	flag.StringVar(&Token, "t", "", "Account Token")
 	flag.Parse()
 
-	// Initiate redis(Not used, but ready for use)
+	// Initiate redis(Not used yet, but ready to set and get)
 	redisInit()
 
 	// Switch this from a map to redis cache for fun? Maybe...
-	// create empty map for auto responses
+	// Create empty map for auto responses
 	autoRes = make(map[string]string)
-	// fill it up
+	// Fill it up
 	fillAutoRes(autoRes)
 }
 
+// I should think of a better name
 func fillAutoRes(m map[string]string) {
+	// Slice of valid commands used in func messageCreate
+	cmdList = []string{"ourteams", "apoc", "reddit"}
+
+	// Command responses
 	m["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	m["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	m["reddit"] = "http://reddit.com/r/soccerspirits"
@@ -67,9 +73,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// cmd = anything after "~joebot "
 	cmd := c[8:]
-	// slice of valid commands
-	cmdList := []string{"ourteams", "apoc", "reddit"}
-	if stringInSlice(cmd, cmdList) {
+	if stringInSlice(cmd, cmdList) {// cmdList defined in func autoResInit
 		messageSend(s, cID, autoRes[cmd])
 	} else {
 		messageSend(s, cID, "Enter a valid command")
@@ -77,8 +81,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func main() {
-	// Create a new Discord session using the provided login information.
-	// dg, err := discordgo.New(Email, Password, Token)
+	// Create a new Discord session using the bot token
 	dg, err := discordgo.New(Token)
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
@@ -98,8 +101,7 @@ func main() {
 	dg.AddHandler(messageCreate)
 
 	// Open the websocket and begin listening.
-	err = dg.Open()
-	if err != nil {
+	if err = dg.Open(); err != nil {
 		fmt.Println("error opening connection,", err)
 		return
 	}
