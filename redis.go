@@ -37,7 +37,8 @@ func redisSet(c *redis.Client, key string, value string) {
 func redisGet(c *redis.Client, key string) {
 	val, err := c.Get(key).Result()
 	if err != nil {
-		panic(err)
+		// panic(err)
+		fmt.Println("Invalid Key")
 	}
 	fmt.Println(key, val)
 }
