@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 	// "reflect"
 	// "io"
 	// "os"
@@ -63,9 +64,13 @@ func getChars() {
 	var createdStruct []expectedChar
 	json.Unmarshal(body, &createdStruct)
 
+	// fmt.Println(strings.Join(createdStruct[0].Stones, ","))
+
 	// loop and store
 	for i := 0; i < len(createdStruct); i++{
+		// Set Story
 		redisClient.HSet(createdStruct[i].Name, "Story", createdStruct[i].Story)
+		redisClient.HSet(createdStruct[i].Name, "Stones", strings.Join(createdStruct[i].Stones, ", "))
 	}
 
 	// _, err := io.Copy(os.Stdout, res.Body)

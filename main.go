@@ -69,11 +69,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	// put in a condition to check for too short, empty arguments
+
 	if stringInSlice(c[8:], cmdList) {// cmdList defined in func autoResInit
 		messageSend(s, cID, autoRes[c[8:]])
-	} else if c[8:14] == "search" {
-		res, _ := redisClient.HGet(c[15:], "Story").Result()
-		// fmt.Println(res)
+	} else if c[8:13] == "Story" {
+		res, _ := redisClient.HGet(c[14:], "Story").Result()
+		messageSend(s, cID, res)
+	} else if  c[8:14] == "Stones" {
+		res, _ := redisClient.HGet(c[15:], "Stones").Result()
 		messageSend(s, cID, res)
 	}else {
 		messageSend(s, cID, "Enter a valid command")
