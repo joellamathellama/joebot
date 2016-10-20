@@ -69,8 +69,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// put in a condition to check for too short, empty arguments
-
+	// THIS IS VERY SHITTY I KNOW, I'LL THINK OF SOMETHING BETTER...
 	if stringInSlice(c[8:], cmdList) {// cmdList defined in func autoResInit
 		messageSend(s, cID, autoRes[c[8:]])
 	} else if c[8:13] == "Story" {
