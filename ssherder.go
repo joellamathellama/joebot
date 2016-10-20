@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"net/http"
 	"encoding/json"
 	"io/ioutil"
@@ -42,8 +42,9 @@ type expectedChar struct {
 	Skills []int `json:"skills"`
 }
 
-// Endpoints
-// Characters: https://ssherder.com/data-api/characters/
+// HOST: https://ssherder.com
+// Characters: /data-api/characters/
+
 func getChars() {
 	res, err := http.Get("https://ssherder.com/data-api/characters/")
 	if err != nil {
@@ -58,10 +59,14 @@ func getChars() {
 	    panic(err.Error())
 	}
 
-	// Unmarshal data into struct
+	// Unmarshal byte data into struct
 	var createdStruct []expectedChar
 	json.Unmarshal(body, &createdStruct)
-	fmt.Printf("%#v", createdStruct)
+
+	// loop and store
+	for i := 0; i < len(createdStruct); i++{
+		redisClient.HSet(createdStruct[i].Name, "Story", createdStruct[i].Story)
+	}
 
 	// _, err := io.Copy(os.Stdout, res.Body)
 	// if err != nil {

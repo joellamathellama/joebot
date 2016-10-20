@@ -29,10 +29,9 @@ func init() {
 	// Test invalid query
 	redisGet(redisClient, "nope")
 
-	// Test Ssherder
+	// Ssherder API call(s)
 	getChars()
 
-	// Switch this from a map to redis cache for fun? Maybe...
 	// Create empty map for auto responses
 	autoRes = make(map[string]string)
 	// Fill it up
@@ -70,11 +69,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// cmd = anything after "~joebot "
-	cmd := c[8:]
-	if stringInSlice(cmd, cmdList) {// cmdList defined in func autoResInit
-		messageSend(s, cID, autoRes[cmd])
-	} else {
+	if stringInSlice(c[8:], cmdList) {// cmdList defined in func autoResInit
+		messageSend(s, cID, autoRes[c[8:]])
+	} else if c[8:14] == "search" {
+		res, _ := redisClient.HGet(c[15:], "Story").Result()
+		// fmt.Println(res)
+		messageSend(s, cID, res)
+	}else {
 		messageSend(s, cID, "Enter a valid command")
 	}
 }
