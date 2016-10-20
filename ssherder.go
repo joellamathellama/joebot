@@ -68,8 +68,10 @@ func getChars() {
 
 	// loop and store
 	for i := 0; i < len(createdStruct); i++{
+		// USE HMSet ya bum!
 		// Set Story
 		redisClient.HSet(createdStruct[i].Name, "Story", createdStruct[i].Story)
+		// Set Stones
 		redisClient.HSet(createdStruct[i].Name, "Stones", strings.Join(createdStruct[i].Stones, ", "))
 	}
 
