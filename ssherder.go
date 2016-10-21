@@ -52,7 +52,6 @@ func getChars() {
 		panic(err)
 	}
 	defer res.Body.Close()
-	// fmt.Println(reflect.TypeOf(res.Body))
 
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
@@ -60,11 +59,9 @@ func getChars() {
 	    panic(err.Error())
 	}
 
-	// Unmarshal byte data into struct
+	// Unmarshal JSON data into struct
 	var createdStruct []expectedChar
 	json.Unmarshal(body, &createdStruct)
-
-	// fmt.Println(strings.Join(createdStruct[0].Stones, ","))
 
 	// loop and store
 	for i := 0; i < len(createdStruct); i++{
@@ -73,11 +70,6 @@ func getChars() {
 		myMap["Stones"] = strings.Join(createdStruct[i].Stones, ", ")
 
 		redisClient.HMSet(createdStruct[i].Name, myMap)
-
-		// Set Story
-		// redisClient.HSet(createdStruct[i].Name, "Story", createdStruct[i].Story)
-		// Set Stones
-		// redisClient.HSet(createdStruct[i].Name, "Stones", strings.Join(createdStruct[i].Stones, ", "))
 	}
 
 	// _, err := io.Copy(os.Stdout, res.Body)

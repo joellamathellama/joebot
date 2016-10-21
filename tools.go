@@ -14,6 +14,10 @@ func stringInSlice(str string, list []string) bool {
 }
 
 func regexpMatch(regex string, word string) bool {
-	res, _ := regexp.MatchString(regex, word)
-	return res
+	res, err := regexp.MatchString(regex, word)
+	if err != nil {
+		panic(err)
+	} else {
+		return res
+	}
 }
