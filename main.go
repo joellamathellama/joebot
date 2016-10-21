@@ -36,7 +36,8 @@ func init() {
 
 	// Ssherder API call(s)
 	// Called once on init and stored into Redis
-	getChars()
+	getPlayers()
+	getSkills()
 
 	// Create map of quick responses
 	botResInit()
@@ -82,6 +83,8 @@ func messageRoutes(s *discordgo.Session, m *discordgo.MessageCreate) {
 		storyRoute(s, c[14:])
 	} else if regexpMatch("(?i)(Stones)[ ][a-zA-Z0-9]", c[8:]) {
 		stonesRoute(s, c[15:])
+	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
+		skillsRoute(s, c[15:])
 	}else {
 		messageSend(s, "Enter a valid command")
 	}
@@ -98,6 +101,19 @@ func storyRoute(s *discordgo.Session, playerName string) {
 
 func stonesRoute(s *discordgo.Session, playerName string) {
 	res, err := redisClient.HGet(strings.Title(playerName), "Stones").Result()
+	if err != nil {
+		messageSend(s, "Enter a valid command")
+	} else {
+		messageSend(s, res)
+	}
+}
+
+func skillsRoute(s *discordgo.Session, playerName string) {
+	playerKey := strings.Title(playerName) + "_skills"
+
+	fmt.Println(redisClient.LLen(playerKey))
+
+	res, err := redisClient.LPop(playerKey).Result()
 	if err != nil {
 		messageSend(s, "Enter a valid command")
 	} else {

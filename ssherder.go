@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"strings"
+	"strconv"
 	// "reflect"
 	// "io"
 	// "os"
@@ -13,7 +14,7 @@ import (
 
 // Expected JSON from Ssherder API
 // It will come back in an Array of Objects
-type expectedChar struct {
+type expectedPlayers struct {
 	ID int `json:"id"`
 	ImageID int `json:"image_id"`
 	BaseCharacter int `json:"base_character"`
@@ -43,10 +44,27 @@ type expectedChar struct {
 	Skills []int `json:"skills"`
 }
 
-// HOST: https://ssherder.com
-// Characters: /data-api/characters/
+type expectedSkills struct {
+	Accumable       bool            `json:"accumable"`
+	AccumableTo     interface{}     `json:"accumable_to"`
+	Category        string          `json:"category"`
+	Cooldown        int             `json:"cooldown"`
+	CooldownGrowth  int             `json:"cooldown_growth"`
+	CooldownInitial int             `json:"cooldown_initial"`
+	Description     string          `json:"description"`
+	Duration        int             `json:"duration"`
+	Effects         [][]interface{} `json:"effects"`
+	Icon            string          `json:"icon"`
+	ID              int             `json:"id"`
+	Name            string          `json:"name"`
+	SpiritCost      string          `json:"spirit_cost"`
+}
 
-func getChars() {
+// HOST: https://ssherder.com
+// Players: /data-api/characters/
+// Skills: /data-api/skills/
+
+func getPlayers() {
 	res, err := http.Get("https://ssherder.com/data-api/characters/")
 	if err != nil {
 		panic(err)
@@ -60,20 +78,54 @@ func getChars() {
 	}
 
 	// Unmarshal JSON data into struct
-	var createdStruct []expectedChar
-	json.Unmarshal(body, &createdStruct)
+	var playerStruct []expectedPlayers
+	json.Unmarshal(body, &playerStruct)
 
 	// loop and store
-	for i := 0; i < len(createdStruct); i++{
-		myMap := make(map[string]string)
-		myMap["Story"] = createdStruct[i].Story
-		myMap["Stones"] = strings.Join(createdStruct[i].Stones, ", ")
+	for i := 0; i < len(playerStruct); i++{
+		playerMap := make(map[string]string)
+		playerMap["Story"] = playerStruct[i].Story
+		playerMap["Stones"] = strings.Join(playerStruct[i].Stones, ", ")
 
-		redisClient.HMSet(createdStruct[i].Name, myMap)
+		redisClient.HMSet(playerStruct[i].Name, playerMap)
+
+		for x := 0; x < len(playerStruct[i].Skills); x++{
+			playerName := playerStruct[i].Name
+			createdKey := playerName + "_skills"
+
+			// key = playername_skills, value = list of stringified(int -> string) skills
+			redisClient.LPush(createdKey, strconv.Itoa(playerStruct[i].Skills[x]))
+		}
 	}
 
 	// _, err := io.Copy(os.Stdout, res.Body)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
+}
+
+func getSkills() {
+	res, err := http.Get("https://ssherder.com/data-api/skills/")
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+	    panic(err.Error())
+	}
+
+	var skillStruct []expectedSkills
+	json.Unmarshal(body, &skillStruct)
+
+	// ID(stringified) to lookup
+	// Store Name, Description
+	for i := 0; i < len(skillStruct); i++{
+		skillMap := make(map[string]string)
+		skillMap["Name"] = skillStruct[i].Name
+		skillMap["Description"] = skillStruct[i].Description
+
+		redisClient.HMSet(strconv.Itoa(skillStruct[i].ID), skillMap)
+	}
 }
