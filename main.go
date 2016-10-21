@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 // Variables used for command line parameters
 var (
-	autoRes map[string]string
+	cmdResList map[string]string
 	cmdList []string
 	Token string
 	BotID string
@@ -33,12 +34,12 @@ func init() {
 	getChars()
 
 	// Create empty map for auto responses
-	autoRes = make(map[string]string)
+	cmdResList = make(map[string]string)
 	// Fill it up
-	autoResInit(autoRes)
+	botResInit(cmdResList)
 }
 
-func autoResInit(m map[string]string) {
+func botResInit(m map[string]string) {
 	// Slice of valid commands used in func messageCreate
 	cmdList = []string{"ourteams", "apoc", "reddit"}
 
@@ -65,19 +66,30 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself and anything short of "~joebot "
 	if m.Author.ID == BotID {
 		return
-	} else if len(c) < 8 || c[:8] != "~joebot " {
+	} else if len(c) < 8 || regexpMatch("^(?i)(~Joebot)[ ]", c[:8]) != true {
 		return
 	}
 
-	// THIS IS VERY SHITTY I KNOW, I'LL THINK OF SOMETHING BETTER...
-	if stringInSlice(c[8:], cmdList) {// cmdList defined in func autoResInit
-		messageSend(s, cID, autoRes[c[8:]])
-	} else if c[8:13] == "Story" {
-		res, _ := redisClient.HGet(c[14:], "Story").Result()
-		messageSend(s, cID, res)
-	} else if  c[8:14] == "Stones" {
-		res, _ := redisClient.HGet(c[15:], "Stones").Result()
-		messageSend(s, cID, res)
+	// condition to match "~joebot", " ", {command}, {name}
+	// take a diff path depending if there is a third argument or not
+
+	// I'll think of something better...
+	if stringInSlice(c[8:], cmdList) {// cmdList defined in func botResInit
+		messageSend(s, cID, cmdResList[c[8:]])
+	} else if regexpMatch("(?i)(Story)[ ][a-zA-Z0-9]", c[8:]) {
+		res, err := redisClient.HGet(strings.Title(c[14:]), "Story").Result()
+		if err != nil {
+			messageSend(s, cID, "Enter a valid command")
+		} else {
+			messageSend(s, cID, res)
+		}
+	} else if regexpMatch("(?i)(Stones)[ ][a-zA-Z0-9]", c[8:]) {
+		res, err := redisClient.HGet(strings.Title(c[15:]), "Stones").Result()
+		if err != nil {
+			messageSend(s, cID, "Enter a valid command")
+		} else {
+			messageSend(s, cID, res)
+		}
 	}else {
 		messageSend(s, cID, "Enter a valid command")
 	}
