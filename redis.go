@@ -7,24 +7,24 @@ import (
 )
 
 var (
-	redisClient *redis.Client
+	rc *redis.Client
 )
 
 // Connect to default port
 func redisInit() {
-	redisClient = redis.NewClient(&redis.Options{
+	rc = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
 
-	pong, err := redisClient.Ping().Result()
+	pong, err := rc.Ping().Result()
 	fmt.Println(pong, err)
 	// Output: PONG <nil>
 
 	// redist test: WORKING
-	// redisSet(redisClient, "test key", "test string")
-	// redisGet(redisClient, "test key")
+	// redisSet(rc, "test key", "test string")
+	// redisGet(rc, "test key")
 }
 
 func redisSet(c *redis.Client, key string, value string) {
@@ -34,11 +34,12 @@ func redisSet(c *redis.Client, key string, value string) {
 	}
 }
 
-func redisGet(c *redis.Client, key string) {
+func redisGet(c *redis.Client, key string) string {
 	val, err := c.Get(key).Result()
 	if err != nil {
 		// panic(err)
 		fmt.Println("Invalid Key")
 	}
-	fmt.Println(key, val)
+	// fmt.Println(key, val)
+	return val
 }
