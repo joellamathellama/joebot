@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"strings"
 	// "reflect"
 
@@ -29,6 +29,8 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		storyRoute(s, c[14:])
 	} else if regexpMatch("(?i)(Stones)[ ][a-zA-Z0-9]", c[8:]) {
 		stonesRoute(s, c[15:])
+	} else if regexpMatch("(?i)(Ssherder)[ ][a-zA-Z0-9]", c[8:]) {
+		ssherderRoute(s, c[17:])
 	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
 		skillsRoute(s, c[15:])
 	}else {
@@ -37,7 +39,9 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 }
 
 func storyRoute(s *dg.Session, playerName string) {
-	res, err := rc.HGet(strings.Title(playerName), "Story").Result()
+	lookupKey := strings.Title(playerName) + "_3"
+	fmt.Println(lookupKey)
+	res, err := rc.HGet(lookupKey, "Story").Result()
 	if err != nil {
 		messageSend(s, "Enter a valid command")
 	} else {
@@ -46,7 +50,9 @@ func storyRoute(s *dg.Session, playerName string) {
 }
 
 func stonesRoute(s *dg.Session, playerName string) {
-	res, err := rc.HGet(strings.Title(playerName), "Stones").Result()
+	lookupKey := strings.Title(playerName) + "_3"
+	fmt.Println(lookupKey)
+	res, err := rc.HGet(lookupKey, "Stones").Result()
 	if err != nil {
 		messageSend(s, "Enter a valid command")
 	} else {
@@ -54,12 +60,25 @@ func stonesRoute(s *dg.Session, playerName string) {
 	}
 }
 
+func ssherderRoute(s *dg.Session, playerName string) {
+	// https://ssherder.com/characters/ID/
+	// lookup player ID, add to URL, send message
+	lookupKey := strings.Title(playerName) + "_3"
+	fmt.Println(lookupKey)
+	res, err := rc.HGet(lookupKey, "ID").Result()
+	if err != nil {
+		messageSend(s, "Enter a valid command")
+	} else {
+		messageSend(s, "https://ssherder.com/characters/" + res)
+	}
+}
+
 func skillsRoute(s *dg.Session, playerName string) {
-	playerKey := strings.Title(playerName) + "_skills"
-
-	// fmt.Println(rc.LLen(playerKey))
-
-	res, err := rc.LPop(playerKey).Result()
+	// https://ssherder.com/characters/ID/
+	// lookup player ID, add to URL, send message
+	lookupKey := strings.Title(playerName) + "_3"
+	fmt.Println(lookupKey)
+	res, err := rc.HGet(lookupKey, "Skills").Result()
 	if err != nil {
 		messageSend(s, "Enter a valid command")
 	} else {

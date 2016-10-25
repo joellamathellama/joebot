@@ -35,11 +35,15 @@ func init() {
 
 	// Ssherder API call(s)
 	// Called once on init and stored into Redis
-	getPlayers()
-	getSkills()
+	ssherderApis()
 
 	// Create map of quick responses
 	botResInit()
+}
+
+func ssherderApis() {
+	getSkills()
+	defer getPlayers()
 }
 
 func botResInit() {

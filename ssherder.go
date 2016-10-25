@@ -85,17 +85,25 @@ func getPlayers() {
 	for i := 0; i < len(playerStruct); i++{
 		playerMap := make(map[string]string)
 		playerMap["Story"] = playerStruct[i].Story
+		playerMap["ID"] = strconv.Itoa(playerStruct[i].ID)
 		playerMap["Stones"] = strings.Join(playerStruct[i].Stones, ", ")
 
-		rc.HMSet(playerStruct[i].Name, playerMap)
-
-		for x := 0; x < len(playerStruct[i].Skills); x++{
-			playerName := playerStruct[i].Name
-			createdKey := playerName + "_skills"
-
-			// key = playername_skills, value = list of stringified(int -> string) skills
-			rc.LPush(createdKey, strconv.Itoa(playerStruct[i].Skills[x]))
+		// instead of storing skill id's([#, #, #, #, #])
+		// do a lookup on those ids to get the skill data
+		// concat all the skill data, and then set it in the playerMap
+		// use callback to make sure skills are called first, then this player call
+		skillString := ""
+		for k := 0; k < len(playerStruct[i].Skills); k++{
+			val:= redisGet(rc, strconv.Itoa(playerStruct[i].Skills[k]))
+			skillString = skillString + val + "\n"
 		}
+		playerMap["Skills"] = skillString
+
+		stringID := strconv.Itoa(playerStruct[i].ID)// stringify ID
+		keyID := string(stringID[0])// grab first index in string form
+		lookupKey := playerStruct[i].Name + "_" + keyID
+
+		rc.HMSet(lookupKey, playerMap)
 	}
 
 	// _, err := io.Copy(os.Stdout, res.Body)
@@ -124,10 +132,8 @@ func getSkills() {
 	// ID(stringified) to lookup
 	// Store Name, Description
 	for i := 0; i < len(skillStruct); i++{
-		skillMap := make(map[string]string)
-		skillMap["Name"] = skillStruct[i].Name
-		skillMap["Description"] = skillStruct[i].Description
+		lookupValue := skillStruct[i].Name + ": " + skillStruct[i].Description
 
-		rc.HMSet(strconv.Itoa(skillStruct[i].ID), skillMap)
+		redisSet(rc, strconv.Itoa(skillStruct[i].ID), lookupValue)
 	}
 }

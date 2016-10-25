@@ -34,11 +34,12 @@ func redisSet(c *redis.Client, key string, value string) {
 	}
 }
 
-func redisGet(c *redis.Client, key string) {
+func redisGet(c *redis.Client, key string) string {
 	val, err := c.Get(key).Result()
 	if err != nil {
 		// panic(err)
 		fmt.Println("Invalid Key")
 	}
-	fmt.Println(key, val)
+	// fmt.Println(key, val)
+	return val
 }
