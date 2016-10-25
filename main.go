@@ -1,11 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"strings"
+	"flag"
 
-	"github.com/bwmarrin/discordgo"
+	dg "github.com/bwmarrin/discordgo"
 )
 
 // Globals
@@ -29,10 +28,10 @@ func init() {
 	// Initiate redis
 	redisInit()
 	// Test redis Set & Get
-	redisSet(redisClient, "redis_test_key", "redis_test_value")
-	redisGet(redisClient, "redis_test_key")
+	redisSet(rc, "redis_test_key", "redis_test_value")
+	redisGet(rc, "redis_test_key")
 	// Test invalid query
-	redisGet(redisClient, "nope")
+	redisGet(rc, "nope")
 
 	// Ssherder API call(s)
 	// Called once on init and stored into Redis
@@ -52,78 +51,16 @@ func botResInit() {
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
 }
 
-func messageSend(s *discordgo.Session, m string) {
+func messageSend(s *dg.Session, m string) {
 	if _, err = s.ChannelMessageSend(cID, m); err != nil {
 		// fmt.Println("Error - s.ChannelMessageSend: ", err)
 		panic(err)
 	}
 }
 
-// This function will be called (due to AddHandler) every time a new
-// message is created on any channel that the autenticated bot has access to.
-func messageRoutes(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// c = users message, cID = channel ID
-	c := m.Content
-	cID = m.ChannelID
-
-	// Ignore all messages created by the bot itself and anything short of "~joebot "
-	if m.Author.ID == BotID {
-		return
-	} else if len(c) < 8 || regexpMatch("^(?i)(~Joebot)[ ]", c[:8]) != true {
-		return
-	}
-
-	// cmdList = valid quick commands
-	cmdList := []string{"ourteams", "apoc", "reddit"}
-
-	// ROUTES
-	if stringInSlice(c[8:], cmdList) {
-		messageSend(s, cmdResList[c[8:]])
-	} else if regexpMatch("(?i)(Story)[ ][a-zA-Z0-9]", c[8:]) {
-		storyRoute(s, c[14:])
-	} else if regexpMatch("(?i)(Stones)[ ][a-zA-Z0-9]", c[8:]) {
-		stonesRoute(s, c[15:])
-	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
-		skillsRoute(s, c[15:])
-	}else {
-		messageSend(s, "Enter a valid command")
-	}
-}
-
-func storyRoute(s *discordgo.Session, playerName string) {
-	res, err := redisClient.HGet(strings.Title(playerName), "Story").Result()
-	if err != nil {
-		messageSend(s, "Enter a valid command")
-	} else {
-		messageSend(s, res)
-	}
-}
-
-func stonesRoute(s *discordgo.Session, playerName string) {
-	res, err := redisClient.HGet(strings.Title(playerName), "Stones").Result()
-	if err != nil {
-		messageSend(s, "Enter a valid command")
-	} else {
-		messageSend(s, res)
-	}
-}
-
-func skillsRoute(s *discordgo.Session, playerName string) {
-	playerKey := strings.Title(playerName) + "_skills"
-
-	fmt.Println(redisClient.LLen(playerKey))
-
-	res, err := redisClient.LPop(playerKey).Result()
-	if err != nil {
-		messageSend(s, "Enter a valid command")
-	} else {
-		messageSend(s, res)
-	}
-}
-
 func main() {
 	// Create a new Discord session using the bot token
-	dg, err := discordgo.New(Token)
+	dg, err := dg.New(Token)
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return

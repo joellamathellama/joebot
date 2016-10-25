@@ -87,14 +87,14 @@ func getPlayers() {
 		playerMap["Story"] = playerStruct[i].Story
 		playerMap["Stones"] = strings.Join(playerStruct[i].Stones, ", ")
 
-		redisClient.HMSet(playerStruct[i].Name, playerMap)
+		rc.HMSet(playerStruct[i].Name, playerMap)
 
 		for x := 0; x < len(playerStruct[i].Skills); x++{
 			playerName := playerStruct[i].Name
 			createdKey := playerName + "_skills"
 
 			// key = playername_skills, value = list of stringified(int -> string) skills
-			redisClient.LPush(createdKey, strconv.Itoa(playerStruct[i].Skills[x]))
+			rc.LPush(createdKey, strconv.Itoa(playerStruct[i].Skills[x]))
 		}
 	}
 
@@ -119,6 +119,8 @@ func getSkills() {
 	var skillStruct []expectedSkills
 	json.Unmarshal(body, &skillStruct)
 
+	// fmt.Println(rc.HGetAll(strconv.Itoa(skillStruct[0].ID)))
+
 	// ID(stringified) to lookup
 	// Store Name, Description
 	for i := 0; i < len(skillStruct); i++{
@@ -126,6 +128,6 @@ func getSkills() {
 		skillMap["Name"] = skillStruct[i].Name
 		skillMap["Description"] = skillStruct[i].Description
 
-		redisClient.HMSet(strconv.Itoa(skillStruct[i].ID), skillMap)
+		rc.HMSet(strconv.Itoa(skillStruct[i].ID), skillMap)
 	}
 }
