@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 
 	dg "github.com/bwmarrin/discordgo"
 )
@@ -13,11 +13,11 @@ import (
 	cmdResList = map of commands and the corresponding responses
 */
 var (
-	cID string
+	cID        string
 	cmdResList map[string]string
-	Token string
-	BotID string
-	err error
+	Token      string
+	BotID      string
+	err        error
 )
 
 func init() {
@@ -43,7 +43,7 @@ func init() {
 
 func ssherderApis() {
 	getSkills()
-	defer getPlayers()
+	getPlayers()
 }
 
 func botResInit() {
@@ -87,7 +87,7 @@ func main() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
-	
+
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
 	// Simple way to keep program running until CTRL-C is pressed.

@@ -33,7 +33,7 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		ssherderRoute(s, c[17:])
 	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
 		skillsRoute(s, c[15:])
-	}else {
+	} else {
 		messageSend(s, "Enter a valid command")
 	}
 }
@@ -69,7 +69,7 @@ func ssherderRoute(s *dg.Session, playerName string) {
 	if err != nil {
 		messageSend(s, "Enter a valid command")
 	} else {
-		messageSend(s, "https://ssherder.com/characters/" + res)
+		messageSend(s, "https://ssherder.com/characters/"+res)
 	}
 }
 
