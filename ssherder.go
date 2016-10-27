@@ -1,13 +1,14 @@
 package main
 
 import (
-	// "fmt"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	// "reflect"
+	// "regexp"
 	"strconv"
 	"strings"
-	// "reflect"
 	// "io"
 	// "os"
 )
@@ -123,8 +124,10 @@ func getPlayers() {
 				// fmt.Println(skillCat)
 			}
 
-			skillInfo := skillName + ": " + skillDesc + "\n\n"
+			// How I want it printed
+			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, skillCat, skillDesc)
 
+			// Order I want it printed
 			if skillCat == "ace" { // Only one ace and active per player
 				ace = skillInfo
 			} else if skillCat == "active" {
@@ -171,16 +174,82 @@ func getSkills() {
 	for i := 0; i < len(skillsStruct); i++ {
 		skillsMap := make(map[string]string)
 		skillsMap["Name"] = skillsStruct[i].Name
-		skillsMap["Description"] = skillsStruct[i].Description
-		// skillsMap["Effects"] = skillsStruct[i].Effects
 		skillsMap["Category"] = skillsStruct[i].Category
 
-		// fmt.Println(skillsStruct[i].Name, reflect.TypeOf(skillsStruct[i].Name))
-		// fmt.Println(skillsStruct[i].Description, reflect.TypeOf(skillsStruct[i].Description))
-		// fmt.Println(skillsStruct[i].Category, reflect.TypeOf(skillsStruct[i].Category))
+		// skillsMap["Description"] = skillsStruct[i].Description
+		editDesc := skillsStruct[i].Description
+
+		// [#][1] + [#][2] * 4 = skill maxed out
+		// recursively look for {#} and replace it based on the #
+		// ch := make(chan bool)
+		// finalDesc := replaceDesc(editDesc, skillsStruct[i].Effects, ch)
+		finalDesc := replaceDesc(editDesc, skillsStruct[i].Effects)
+		// <-ch
+		// // fmt.Println(finalDesc)
+		skillsMap["Description"] = finalDesc
 
 		lookupKey := "skill_" + strconv.Itoa(skillsStruct[i].ID)
 		// fmt.Println(lookupKey, reflect.TypeOf(lookupKey))
 		rc.HMSet(lookupKey, skillsMap)
 	}
 }
+
+func replaceDesc(s string, i [][]interface{}) string {
+	final := s
+	for x := 0; x < len(i); x++ {
+		find := fmt.Sprintf("{%d}", x)
+		base := i[x][1].(string)
+		multi := i[x][2].(string)
+
+		// fmt.Println(x, find, len(i), base, multi)
+
+		// convert to int for calculation
+		baseVerted, _ := strconv.ParseFloat(base, 64)
+		multiVerted, _ := strconv.ParseFloat(multi, 64)
+		baseInt := int(baseVerted)
+		multiInt := int(multiVerted * 4)
+		// calculate then convert back to string for string replacement
+		replacement := strconv.Itoa((baseInt + multiInt))
+		final = strings.Replace(final, find, replacement, -1)
+
+		// fmt.Println(s, find, replacement, final)
+	}
+	return final
+}
+
+// FAILED ATTEMPT AT USING REGEX + RECURSION :C
+// Keeping it cause why not
+// func replaceDesc(s string, i [][]interface{}) string {
+// 	re := regexp.MustCompile("[{][0-9][}]")
+// 	a := re.FindStringIndex(s) // [start_index end_index]
+// 	// if no index exit
+// 	if len(a) == 0 {
+// 		return s
+// 	}
+// 	// grab the # between the {}
+// 	b := a[0] + 1
+// 	// type assertion to access the stringified numbers
+// 	base := ""
+// 	multi := ""
+// 	f, _ := strconv.Atoi(string(s[b]))
+
+// 	if len(i) >= (f + 1) {
+// 		base = i[f][1].(string)
+// 		multi = i[f][2].(string)
+// 	} else {
+// 		base = "0"
+// 		multi = "0"
+// 	}
+
+// 	// convert to int for calculation
+// 	baseVerted, _ := strconv.ParseFloat(base, 64)
+// 	multiVerted, _ := strconv.ParseFloat(multi, 64)
+// 	baseInt := int(baseVerted)
+// 	multiInt := int(multiVerted * 4)
+
+// 	// calculate then convert back to string for string replacement
+// 	finalNum := strconv.Itoa((baseInt + multiInt))
+
+// 	c := re.ReplaceAllString(s, finalNum)
+// 	return replaceDesc(c, i)
+// }
