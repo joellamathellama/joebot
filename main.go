@@ -26,11 +26,14 @@ func init() {
 	flag.Parse()
 
 	// Initiate redis
+	fmt.Println("Init Redis. Expect: No return")
 	redisInit()
 	// Test redis Set & Get
+	fmt.Println("Redis Set & Get test. Expect: No return")
 	redisSet(rc, "redis_test_key", "redis_test_value")
 	redisGet(rc, "redis_test_key")
 	// Test invalid query
+	fmt.Println("Redis invalid query test. Expect: 'Invalid Key'")
 	redisGet(rc, "nope")
 
 	// Ssherder API call(s)
@@ -46,20 +49,9 @@ func ssherderApis() {
 	getPlayers()
 }
 
-func botResInit() {
-	cmdResList = make(map[string]string)
-
-	// Fill it up
-	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
-	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
-	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-}
-
-func messageSend(s *dg.Session, m string) {
-	if _, err = s.ChannelMessageSend(cID, m); err != nil {
-		// fmt.Println("Error - s.ChannelMessageSend: ", err)
-		panic(err)
-	}
+func whenReady(s *dg.Session, event *dg.Ready) {
+	// Set the playing status.
+	_ = s.UpdateStatus(0, "~joebot help")
 }
 
 func main() {
@@ -78,6 +70,9 @@ func main() {
 
 	// Store the account ID for later use.
 	BotID = u.ID
+
+	// Update status on ready
+	dg.AddHandler(whenReady)
 
 	// Register messageRoutes as a callback for the messageRoutes events.
 	dg.AddHandler(messageRoutes)

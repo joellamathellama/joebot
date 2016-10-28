@@ -8,6 +8,24 @@ import (
 	dg "github.com/bwmarrin/discordgo"
 )
 
+func messageSend(s *dg.Session, m string) {
+	if _, err = s.ChannelMessageSend(cID, m); err != nil {
+		// fmt.Println("Error - s.ChannelMessageSend: ", err)
+		panic(err)
+	}
+}
+
+// Quick bot responses
+func botResInit() {
+	cmdResList = make(map[string]string)
+
+	// Fill it up
+	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
+	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
+	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
+	cmdResList["help"] = "Man, idk, don't bother me again."
+}
+
 // This function will be called (due to AddHandler) every time a new
 // message is created on any channel that the autenticated bot has access to.
 func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
@@ -38,12 +56,15 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	}
 }
 
+/*
+	the appended "_3" referrs to a players third evolution, which is all anyone cares about
+*/
 func storyRoute(s *dg.Session, playerName string) {
 	lookupKey := strings.Title(playerName) + "_3"
 	fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Story").Result()
 	if err != nil {
-		messageSend(s, "Enter a valid command")
+		messageSend(s, "Player's story not found! Try, idk, typing it correctly?")
 	} else {
 		messageSend(s, res)
 	}
@@ -54,7 +75,7 @@ func stonesRoute(s *dg.Session, playerName string) {
 	fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Stones").Result()
 	if err != nil {
-		messageSend(s, "Enter a valid command")
+		messageSend(s, "Player's stones not found. Prolly cause you're stoned...")
 	} else {
 		messageSend(s, res)
 	}
@@ -67,7 +88,7 @@ func ssherderRoute(s *dg.Session, playerName string) {
 	fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "ID").Result()
 	if err != nil {
-		messageSend(s, "Enter a valid command")
+		messageSend(s, "Who?!")
 	} else {
 		messageSend(s, "https://ssherder.com/characters/"+res)
 	}
@@ -80,7 +101,7 @@ func skillsRoute(s *dg.Session, playerName string) {
 	fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Skills").Result()
 	if err != nil {
-		messageSend(s, "Enter a valid command")
+		messageSend(s, "Player's skills not found. Sharpen your typing skills first...")
 	} else {
 		messageSend(s, res)
 	}

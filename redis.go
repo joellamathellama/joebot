@@ -18,6 +18,7 @@ func redisInit() {
 		DB:       0,  // use default DB
 	})
 
+	fmt.Println("Redis Ping Pong test. Expect: 'PONG <nil>'")
 	pong, err := rc.Ping().Result()
 	fmt.Println(pong, err)
 	// Output: PONG <nil>
