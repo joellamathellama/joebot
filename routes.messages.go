@@ -23,7 +23,7 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-	cmdResList["help"] = "Overwatch Commands:\nLookup a Players PC stats: '~joebot pcstats <Battlenet Tag(Ex. joellama#1114)>'"
+	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC stats:** '~joebot pcstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)"
 }
 
 // This function will be called (due to AddHandler) every time a new

@@ -56,6 +56,9 @@ func getPlayerStats(bnetID string) string {
 	}
 
 	m := playerStruct.(map[string]interface{})
+	if m["data"] == nil {
+		return "Not Found."
+	}
 	n := m["data"].(map[string]interface{})
 	level := n["level"].(float64)
 	games := n["games"].(map[string]interface{})

@@ -51,7 +51,7 @@ func ssherderApis() {
 
 func whenReady(s *dg.Session, event *dg.Ready) {
 	// Set the playing status.
-	_ = s.UpdateStatus(0, "~joebot help")
+	_ = s.UpdateStatus(0, "Type: '~joebot help'")
 }
 
 func main() {
