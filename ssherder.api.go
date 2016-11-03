@@ -100,24 +100,37 @@ func getPlayers() {
 		for k := 0; k < len(playerStruct[i].Skills); k++ {
 			// TODO: Use HGetAll instead
 
-			nameKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
-			skillName, err := rc.HGet(nameKey, "Name").Result()
+			hashKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
+
+			skillName, err := rc.HGet(hashKey, "Name").Result()
 			if err != nil {
 				panic(err)
 			} else {
 				// fmt.Println(skillName)
 			}
 
-			descKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
-			skillDesc, err := rc.HGet(descKey, "Description").Result()
+			skillDesc, err := rc.HGet(hashKey, "Description").Result()
 			if err != nil {
 				panic(err)
 			} else {
 				// fmt.Println(skillDesc)
 			}
 
-			catKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
-			skillCat, err := rc.HGet(catKey, "Category").Result()
+			skillCat, err := rc.HGet(hashKey, "Category").Result()
+			if err != nil {
+				panic(err)
+			} else {
+				// fmt.Println(skillCat)
+			}
+
+			skillCost, err := rc.HGet(hashKey, "SpiritCost").Result()
+			if err != nil {
+				panic(err)
+			} else {
+				// fmt.Println(skillCat)
+			}
+
+			skillCD, err := rc.HGet(hashKey, "Cooldown").Result()
 			if err != nil {
 				panic(err)
 			} else {
@@ -131,7 +144,7 @@ func getPlayers() {
 			if skillCat == "ace" { // Only one ace and active per player
 				ace = skillInfo
 			} else if skillCat == "active" {
-				active = skillInfo
+				active = fmt.Sprintf("**%s** [%s, %sspirit, %sm] \n%s\n\n", skillName, skillCat, skillCost, skillCD, skillDesc)
 			} else { // Three passive skills per player
 				passives = passives + skillInfo
 			}
@@ -175,6 +188,8 @@ func getSkills() {
 		skillsMap := make(map[string]string)
 		skillsMap["Name"] = skillsStruct[i].Name
 		skillsMap["Category"] = skillsStruct[i].Category
+		skillsMap["Cooldown"] = strconv.Itoa(skillsStruct[i].Cooldown)
+		skillsMap["SpiritCost"] = skillsStruct[i].SpiritCost
 
 		// skillsMap["Description"] = skillsStruct[i].Description
 		editDesc := skillsStruct[i].Description

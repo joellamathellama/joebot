@@ -26,10 +26,13 @@ func init() {
 	flag.Parse()
 
 	// Initiate redis
-	fmt.Println("Init Redis. Expect: No return")
+	fmt.Println("Init Redis. Expect: No response")
 	redisInit()
+	// Flush Redis
+	fmt.Println("Flushing ALL Keys in ALLDatabases")
+	rc.FlushAll()
 	// Test redis Set & Get
-	fmt.Println("Redis Set & Get test. Expect: No return")
+	fmt.Println("Redis Set & Get test. Expect: No response")
 	redisSet(rc, "redis_test_key", "redis_test_value")
 	redisGet(rc, "redis_test_key")
 	// Test invalid query

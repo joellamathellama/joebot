@@ -186,9 +186,9 @@ func getPlayerStats(bnetID string, platform string) string {
 		// panic(err)
 	}
 
-	m := statsStruct.(map[string]interface{})
-
 	messageToSend := ""
+
+	m := statsStruct.(map[string]interface{})
 
 	for key, value := range m {
 		if s, ok := value.(string); ok {
