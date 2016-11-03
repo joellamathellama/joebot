@@ -23,7 +23,7 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-	cmdResList["help"] = "Man, idk, don't bother me again."
+	cmdResList["help"] = "Overwatch Commands:\nLookup a Players PC stats: '~joebot pcstats <Battlenet Tag(Ex. joellama#1114)>'"
 }
 
 // This function will be called (due to AddHandler) every time a new
@@ -51,6 +51,8 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		ssherderRoute(s, c[17:])
 	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
 		skillsRoute(s, c[15:])
+	} else if regexpMatch("(?i)(pcstats)[ ][a-zA-Z0-9]", c[8:]) {
+		statsRoute(s, c[16:])
 	} else {
 		messageSend(s, "Enter a valid command")
 	}
@@ -105,4 +107,12 @@ func skillsRoute(s *dg.Session, playerName string) {
 	} else {
 		messageSend(s, res)
 	}
+}
+
+func statsRoute(s *dg.Session, playerName string) {
+	// replace # with - and call getPlayerStats
+	fmtName := strings.Replace(playerName, "#", "-", -1)
+	playerStats := getPlayerStats(fmtName)
+	// playerStats := getPlayerStats("jawnkeem-1982")
+	messageSend(s, playerStats)
 }
