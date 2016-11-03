@@ -40,7 +40,13 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		return
 	}
 
-	// ROUTES
+	/*
+		ROUTES
+		if regexpMatch(REGEX, command)
+			routeFunction()
+		else
+			Send message "command not found"
+	*/
 	if len(cmdResList[c[8:]]) != 0 {
 		messageSend(s, cmdResList[c[8:]])
 		/* SOCCER SPIRITS */
