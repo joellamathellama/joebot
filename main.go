@@ -29,7 +29,7 @@ func init() {
 	fmt.Println("Init Redis. Expect: No response")
 	redisInit()
 	// Flush Redis
-	fmt.Println("Flushing ALL Keys in ALLDatabases")
+	fmt.Println("Flushing ALL Keys in ALL Databases")
 	rc.FlushAll()
 	// Test redis Set & Get
 	fmt.Println("Redis Set & Get test. Expect: No response")
@@ -54,7 +54,9 @@ func ssherderApis() {
 
 func whenReady(s *dg.Session, event *dg.Ready) {
 	// Set the playing status.
-	_ = s.UpdateStatus(0, "Type: '~joebot help'")
+	if err = s.UpdateStatus(0, "Type: '~joebot help'"); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {

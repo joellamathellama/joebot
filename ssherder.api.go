@@ -68,19 +68,24 @@ type expectedSkills struct {
 func getPlayers() {
 	res, err := http.Get("https://ssherder.com/data-api/characters/")
 	if err != nil {
-		panic(err)
+		fmt.Println("Api Server is down!")
+		return
 	}
 	defer res.Body.Close()
 
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
+		return
 	}
 
 	// Unmarshal JSON data into struct
 	var playerStruct []expectedPlayers
-	json.Unmarshal(body, &playerStruct)
+	if err := json.Unmarshal(body, &playerStruct); err != nil {
+		fmt.Println("Error with: json.Unmarshal(body, &playerStruct)")
+		return
+	}
 
 	// loop and store
 	for i := 0; i < len(playerStruct); i++ {
@@ -104,37 +109,27 @@ func getPlayers() {
 
 			skillName, err := rc.HGet(hashKey, "Name").Result()
 			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillName)
+				fmt.Println("Error getting Player Name")
 			}
 
 			skillDesc, err := rc.HGet(hashKey, "Description").Result()
 			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillDesc)
+				fmt.Println("Error getting Player Description")
 			}
 
 			skillCat, err := rc.HGet(hashKey, "Category").Result()
 			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillCat)
+				fmt.Println("Error getting Player Category")
 			}
 
 			skillCost, err := rc.HGet(hashKey, "SpiritCost").Result()
 			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillCat)
+				fmt.Println("Error getting Player Spirit Cost")
 			}
 
 			skillCD, err := rc.HGet(hashKey, "Cooldown").Result()
 			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillCat)
+				fmt.Println("Error getting Player Cooldown")
 			}
 
 			// How I want it printed
@@ -171,17 +166,22 @@ func getPlayers() {
 func getSkills() {
 	res, err := http.Get("https://ssherder.com/data-api/skills/")
 	if err != nil {
-		panic(err)
+		fmt.Println("Api Server is down!")
+		return
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
+		return
 	}
 
 	var skillsStruct []expectedSkills
-	json.Unmarshal(body, &skillsStruct)
+	if err := json.Unmarshal(body, &skillsStruct); err != nil {
+		fmt.Println("Error with: json.Unmarshal(body, &skillsStruct)")
+		return
+	}
 
 	// ID(stringified) to lookup
 	for i := 0; i < len(skillsStruct); i++ {
