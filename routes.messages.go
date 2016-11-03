@@ -23,7 +23,7 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*"
+	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile/PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile/Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*"
 }
 
 // This function will be called (due to AddHandler) every time a new
@@ -43,6 +43,7 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	// ROUTES
 	if len(cmdResList[c[8:]]) != 0 {
 		messageSend(s, cmdResList[c[8:]])
+		/* SOCCER SPIRITS */
 	} else if regexpMatch("(?i)(Story)[ ][a-zA-Z0-9]", c[8:]) {
 		storyRouteSS(s, c[14:])
 	} else if regexpMatch("(?i)(Stones)[ ][a-zA-Z0-9]", c[8:]) {
@@ -51,10 +52,19 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		ssherderRouteSS(s, c[17:])
 	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
 		skillsRouteSS(s, c[15:])
+		/* OVERWATCH */
 	} else if regexpMatch("(?i)(PCprofile)[ ][a-zA-Z0-9]", c[8:]) {
-		profileRouteOW(s, c[18:])
+		profileRouteOW(s, c[18:], "pc")
 	} else if regexpMatch("(?i)(PCstats)[ ][a-zA-Z0-9]", c[8:]) {
-		statsRouteOW(s, c[16:])
+		statsRouteOW(s, c[16:], "pc")
+	} else if regexpMatch("(?i)(PSprofile)[ ][a-zA-Z0-9]", c[8:]) {
+		profileRouteOW(s, c[18:], "psn")
+	} else if regexpMatch("(?i)(PSstats)[ ][a-zA-Z0-9]", c[8:]) {
+		statsRouteOW(s, c[16:], "psn")
+	} else if regexpMatch("(?i)(Xprofile)[ ][a-zA-Z0-9]", c[8:]) {
+		profileRouteOW(s, c[17:], "xbl")
+	} else if regexpMatch("(?i)(Xstats)[ ][a-zA-Z0-9]", c[8:]) {
+		statsRouteOW(s, c[15:], "xbl")
 	} else {
 		messageSend(s, "Enter a valid command")
 	}
@@ -114,21 +124,39 @@ func skillsRouteSS(s *dg.Session, playerName string) {
 
 /* OVERWATCH ROUTES */
 
-func profileRouteOW(s *dg.Session, playerName string) {
-	messageSend(s, "This may take a few seconds...")
-
+func profileRouteOW(s *dg.Session, playerName string, platform string) {
 	// replace # with - and call getPlayerStats
 	fmtName := strings.Replace(playerName, "#", "-", -1)
-	playerProfile := getPlayerProfile(fmtName)
+
+	// Look it up in redis, if exit, return info, if not, continue
+	playerHash := fmt.Sprintf("%s%s", fmtName, platform)
+	res, err := rc.HGet(playerHash, "profile").Result()
+	if err == nil {
+		messageSend(s, res)
+		return
+	}
+
+	messageSend(s, "This may take a few seconds...")
+
+	playerProfile := getPlayerProfile(fmtName, platform)
 
 	messageSend(s, playerProfile)
 }
 
-func statsRouteOW(s *dg.Session, playerName string) {
+func statsRouteOW(s *dg.Session, playerName string, platform string) {
+	fmtName := strings.Replace(playerName, "#", "-", -1)
+
+	// Look it up in redis, if exit, return info, if not, continue
+	playerHash := fmt.Sprintf("%s%s", fmtName, platform)
+	res, err := rc.HGet(playerHash, "stats").Result()
+	if err == nil {
+		messageSend(s, res)
+		return
+	}
+
 	messageSend(s, "This may take few seconds...")
 
-	fmtName := strings.Replace(playerName, "#", "-", -1)
-	playerStats := getPlayerStats(fmtName)
+	playerStats := getPlayerStats(fmtName, platform)
 
 	messageSend(s, playerStats)
 }
