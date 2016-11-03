@@ -23,7 +23,7 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC stats:** '~joebot pcstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)"
+	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*"
 }
 
 // This function will be called (due to AddHandler) every time a new
@@ -44,24 +44,27 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	if len(cmdResList[c[8:]]) != 0 {
 		messageSend(s, cmdResList[c[8:]])
 	} else if regexpMatch("(?i)(Story)[ ][a-zA-Z0-9]", c[8:]) {
-		storyRoute(s, c[14:])
+		storyRouteSS(s, c[14:])
 	} else if regexpMatch("(?i)(Stones)[ ][a-zA-Z0-9]", c[8:]) {
-		stonesRoute(s, c[15:])
+		stonesRouteSS(s, c[15:])
 	} else if regexpMatch("(?i)(Ssherder)[ ][a-zA-Z0-9]", c[8:]) {
-		ssherderRoute(s, c[17:])
+		ssherderRouteSS(s, c[17:])
 	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
-		skillsRoute(s, c[15:])
-	} else if regexpMatch("(?i)(pcstats)[ ][a-zA-Z0-9]", c[8:]) {
-		statsRoute(s, c[16:])
+		skillsRouteSS(s, c[15:])
+	} else if regexpMatch("(?i)(PCprofile)[ ][a-zA-Z0-9]", c[8:]) {
+		profileRouteOW(s, c[18:])
+	} else if regexpMatch("(?i)(PCstats)[ ][a-zA-Z0-9]", c[8:]) {
+		statsRouteOW(s, c[16:])
 	} else {
 		messageSend(s, "Enter a valid command")
 	}
 }
 
 /*
-	the appended "_3" referrs to a players third evolution, which is all anyone cares about
+	SOCCER SPIRITS ROUTES
+	The appended "_3" referrs to a players third evolution, which is all anyone cares about
 */
-func storyRoute(s *dg.Session, playerName string) {
+func storyRouteSS(s *dg.Session, playerName string) {
 	lookupKey := strings.Title(playerName) + "_3"
 	fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Story").Result()
@@ -72,7 +75,7 @@ func storyRoute(s *dg.Session, playerName string) {
 	}
 }
 
-func stonesRoute(s *dg.Session, playerName string) {
+func stonesRouteSS(s *dg.Session, playerName string) {
 	lookupKey := strings.Title(playerName) + "_3"
 	fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Stones").Result()
@@ -83,7 +86,7 @@ func stonesRoute(s *dg.Session, playerName string) {
 	}
 }
 
-func ssherderRoute(s *dg.Session, playerName string) {
+func ssherderRouteSS(s *dg.Session, playerName string) {
 	// https://ssherder.com/characters/ID/
 	// lookup player ID, add to URL, send message
 	lookupKey := strings.Title(playerName) + "_3"
@@ -96,7 +99,7 @@ func ssherderRoute(s *dg.Session, playerName string) {
 	}
 }
 
-func skillsRoute(s *dg.Session, playerName string) {
+func skillsRouteSS(s *dg.Session, playerName string) {
 	// https://ssherder.com/characters/ID/
 	// lookup player ID, add to URL, send message
 	lookupKey := strings.Title(playerName) + "_3"
@@ -109,10 +112,23 @@ func skillsRoute(s *dg.Session, playerName string) {
 	}
 }
 
-func statsRoute(s *dg.Session, playerName string) {
+/* OVERWATCH ROUTES */
+
+func profileRouteOW(s *dg.Session, playerName string) {
+	messageSend(s, "This may take a few seconds...")
+
 	// replace # with - and call getPlayerStats
 	fmtName := strings.Replace(playerName, "#", "-", -1)
+	playerProfile := getPlayerProfile(fmtName)
+
+	messageSend(s, playerProfile)
+}
+
+func statsRouteOW(s *dg.Session, playerName string) {
+	messageSend(s, "This may take few seconds...")
+
+	fmtName := strings.Replace(playerName, "#", "-", -1)
 	playerStats := getPlayerStats(fmtName)
-	// playerStats := getPlayerStats("jawnkeem-1982")
+
 	messageSend(s, playerStats)
 }
