@@ -141,13 +141,13 @@ func getPlayers() {
 			}
 
 			// How I want it printed
-			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, skillCat, skillDesc)
+			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, strings.Title(skillCat), skillDesc)
 
 			// Order I want it printed
 			if skillCat == "ace" { // Only one ace and active per player
 				ace = skillInfo
 			} else if skillCat == "active" {
-				active = fmt.Sprintf("**%s** [%s, %sspirit, %sm] \n%s\n\n", skillName, skillCat, skillCost, skillCD, skillDesc)
+				active = fmt.Sprintf("**%s** [%s, %sspirit, %sm] \n%s\n\n", skillName, strings.Title(skillCat), skillCost, skillCD, skillDesc)
 			} else { // Three passive skills per player
 				passives = passives + skillInfo
 			}

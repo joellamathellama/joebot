@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-var path = "debug.txt"
-
 func stringInSlice(str string, list []string) bool {
 	for _, v := range list {
 		if v == str {
@@ -32,6 +30,12 @@ func regexpMatch(regex string, word string) bool {
 	}
 	return res
 }
+
+/*
+	DEBUG LOGGING
+*/
+
+var path = "debug.txt"
 
 func writeLog(logString string) {
 	if !FileExists(path) {

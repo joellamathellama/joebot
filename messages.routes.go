@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	// "reflect"
+	"strings"
 
 	dg "github.com/bwmarrin/discordgo"
 )
@@ -24,7 +24,7 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile/PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile/Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*"
+	cmdResList["help"] = "*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile/PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile/Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*(Except Bnet Tags)"
 }
 
 // This function will be called (due to AddHandler) every time a new
@@ -79,10 +79,31 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 
 /*
 	SOCCER SPIRITS ROUTES
-	The appended "_3" referrs to a players third evolution, which is all anyone cares about
 */
+
+// Search for the highest evolution of a player, starting at 3(EE), 2(E), 1(Base)
+func highestEvoSS(playerName string) string {
+	// Start at "_3"
+	// HGETALL to see if entry exists, if not decrement, repeat
+	finalForm := playerName + "_3"
+	for i := 3; i > 0; i-- {
+		lookupKey := strings.Title(fmt.Sprintf("%s_%d", playerName, i))
+		exists, err := rc.Exists(lookupKey).Result()
+		if err != nil {
+			writeErr(err)
+		} else if exists {
+			finalForm = lookupKey
+			break
+		} else {
+			continue
+		}
+	}
+
+	return finalForm
+}
+
 func storyRouteSS(s *dg.Session, playerName string) {
-	lookupKey := strings.Title(playerName) + "_3"
+	lookupKey := highestEvoSS(playerName)
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Story").Result()
 	if err != nil {
@@ -94,7 +115,7 @@ func storyRouteSS(s *dg.Session, playerName string) {
 }
 
 func stonesRouteSS(s *dg.Session, playerName string) {
-	lookupKey := strings.Title(playerName) + "_3"
+	lookupKey := highestEvoSS(playerName)
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Stones").Result()
 	if err != nil {
@@ -108,7 +129,7 @@ func stonesRouteSS(s *dg.Session, playerName string) {
 func ssherderRouteSS(s *dg.Session, playerName string) {
 	// https://ssherder.com/characters/ID/
 	// lookup player ID, add to URL, send message
-	lookupKey := strings.Title(playerName) + "_3"
+	lookupKey := highestEvoSS(playerName)
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "ID").Result()
 	if err != nil {
@@ -122,7 +143,7 @@ func ssherderRouteSS(s *dg.Session, playerName string) {
 func skillsRouteSS(s *dg.Session, playerName string) {
 	// https://ssherder.com/characters/ID/
 	// lookup player ID, add to URL, send message
-	lookupKey := strings.Title(playerName) + "_3"
+	lookupKey := highestEvoSS(playerName)
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Skills").Result()
 	if err != nil {
@@ -142,8 +163,9 @@ func profileRouteOW(s *dg.Session, playerName string, platform string) {
 	// Look it up in redis, if exit, return info, if not, continue
 	playerHash := fmt.Sprintf("%s%s", fmtName, platform)
 	res, err := rc.HGet(playerHash, "profile").Result()
-	if err == nil {
+	if err != nil {
 		writeErr(err)
+	} else {
 		messageSend(s, res)
 		return
 	}
@@ -161,8 +183,9 @@ func statsRouteOW(s *dg.Session, playerName string, platform string) {
 	// Look it up in redis, if exit, return info, if not, continue
 	playerHash := fmt.Sprintf("%s%s", fmtName, platform)
 	res, err := rc.HGet(playerHash, "stats").Result()
-	if err == nil {
+	if err != nil {
 		writeErr(err)
+	} else {
 		messageSend(s, res)
 		return
 	}
