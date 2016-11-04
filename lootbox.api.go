@@ -90,6 +90,7 @@ func getPlayerProfile(bnetID string, platform string) string {
 	url := fmt.Sprintf("https://api.lootbox.eu/%s/us/%s/profile", platform, bnetID)
 	res, err := http.Get(url)
 	if err != nil {
+		writeErr(err)
 		return "Api Server is down!"
 	}
 	defer res.Body.Close()
@@ -97,6 +98,7 @@ func getPlayerProfile(bnetID string, platform string) string {
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		writeErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 	}
 
@@ -104,6 +106,7 @@ func getPlayerProfile(bnetID string, platform string) string {
 	// var profileStruct []expectedPlayerProfile
 	var profileStruct interface{}
 	if err := json.Unmarshal(body, &profileStruct); err != nil {
+		writeErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 	}
 
@@ -162,7 +165,8 @@ func getPlayerStats(bnetID string, platform string) string {
 	url := fmt.Sprintf("https://api.lootbox.eu/%s/us/%s/quick-play/allHeroes/", platform, bnetID)
 	res, err := http.Get(url)
 	if err != nil {
-		return "Api Server is down!"
+		writeErr(err)
+		return "Somethings wrong with lootbox!"
 		// panic(err)
 	}
 	defer res.Body.Close()
@@ -170,6 +174,7 @@ func getPlayerStats(bnetID string, platform string) string {
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		writeErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 		// panic(err)
 	}
@@ -182,6 +187,7 @@ func getPlayerStats(bnetID string, platform string) string {
 
 	var statsStruct interface{}
 	if err := json.Unmarshal(body, &statsStruct); err != nil {
+		writeErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 		// panic(err)
 	}

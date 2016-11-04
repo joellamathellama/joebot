@@ -10,8 +10,9 @@ import (
 
 func messageSend(s *dg.Session, m string) {
 	if _, err = s.ChannelMessageSend(cID, m); err != nil {
-		// fmt.Println("Error - s.ChannelMessageSend: ", err)
-		panic(err)
+		writeErr(err)
+		fmt.Println(err)
+		checkError(err)
 	}
 }
 
@@ -85,6 +86,7 @@ func storyRouteSS(s *dg.Session, playerName string) {
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Story").Result()
 	if err != nil {
+		writeErr(err)
 		messageSend(s, "Player's story not found! Try, idk, typing it correctly?")
 	} else {
 		messageSend(s, res)
@@ -96,6 +98,7 @@ func stonesRouteSS(s *dg.Session, playerName string) {
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Stones").Result()
 	if err != nil {
+		writeErr(err)
 		messageSend(s, "Player's stones not found. Prolly cause you're stoned...")
 	} else {
 		messageSend(s, res)
@@ -109,6 +112,7 @@ func ssherderRouteSS(s *dg.Session, playerName string) {
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "ID").Result()
 	if err != nil {
+		writeErr(err)
 		messageSend(s, "Who?!")
 	} else {
 		messageSend(s, "https://ssherder.com/characters/"+res)
@@ -122,6 +126,7 @@ func skillsRouteSS(s *dg.Session, playerName string) {
 	// fmt.Println(lookupKey)
 	res, err := rc.HGet(lookupKey, "Skills").Result()
 	if err != nil {
+		writeErr(err)
 		messageSend(s, "Player's skills not found. Sharpen your typing skills first...")
 	} else {
 		messageSend(s, res)
@@ -138,6 +143,7 @@ func profileRouteOW(s *dg.Session, playerName string, platform string) {
 	playerHash := fmt.Sprintf("%s%s", fmtName, platform)
 	res, err := rc.HGet(playerHash, "profile").Result()
 	if err == nil {
+		writeErr(err)
 		messageSend(s, res)
 		return
 	}
@@ -156,6 +162,7 @@ func statsRouteOW(s *dg.Session, playerName string, platform string) {
 	playerHash := fmt.Sprintf("%s%s", fmtName, platform)
 	res, err := rc.HGet(playerHash, "stats").Result()
 	if err == nil {
+		writeErr(err)
 		messageSend(s, res)
 		return
 	}

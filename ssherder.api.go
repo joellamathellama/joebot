@@ -68,7 +68,8 @@ type expectedSkills struct {
 func getPlayers() {
 	res, err := http.Get("https://ssherder.com/data-api/characters/")
 	if err != nil {
-		fmt.Println("Api Server is down!")
+		writeErr(err)
+		fmt.Println("Somethings wrong with Ssherder!")
 		return
 	}
 	defer res.Body.Close()
@@ -76,6 +77,7 @@ func getPlayers() {
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		writeErr(err)
 		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
 		return
 	}
@@ -83,6 +85,7 @@ func getPlayers() {
 	// Unmarshal JSON data into struct
 	var playerStruct []expectedPlayers
 	if err := json.Unmarshal(body, &playerStruct); err != nil {
+		writeErr(err)
 		fmt.Println("Error with: json.Unmarshal(body, &playerStruct)")
 		return
 	}
@@ -109,26 +112,31 @@ func getPlayers() {
 
 			skillName, err := rc.HGet(hashKey, "Name").Result()
 			if err != nil {
+				writeErr(err)
 				fmt.Println("Error getting Player Name")
 			}
 
 			skillDesc, err := rc.HGet(hashKey, "Description").Result()
 			if err != nil {
+				writeErr(err)
 				fmt.Println("Error getting Player Description")
 			}
 
 			skillCat, err := rc.HGet(hashKey, "Category").Result()
 			if err != nil {
+				writeErr(err)
 				fmt.Println("Error getting Player Category")
 			}
 
 			skillCost, err := rc.HGet(hashKey, "SpiritCost").Result()
 			if err != nil {
+				writeErr(err)
 				fmt.Println("Error getting Player Spirit Cost")
 			}
 
 			skillCD, err := rc.HGet(hashKey, "Cooldown").Result()
 			if err != nil {
+				writeErr(err)
 				fmt.Println("Error getting Player Cooldown")
 			}
 
@@ -166,6 +174,7 @@ func getPlayers() {
 func getSkills() {
 	res, err := http.Get("https://ssherder.com/data-api/skills/")
 	if err != nil {
+		writeErr(err)
 		fmt.Println("Api Server is down!")
 		return
 	}
@@ -173,12 +182,14 @@ func getSkills() {
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		writeErr(err)
 		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
 		return
 	}
 
 	var skillsStruct []expectedSkills
 	if err := json.Unmarshal(body, &skillsStruct); err != nil {
+		writeErr(err)
 		fmt.Println("Error with: json.Unmarshal(body, &skillsStruct)")
 		return
 	}

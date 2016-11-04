@@ -4,4 +4,7 @@ ssherder
 lootbox
 redis
 tools
+dump
+debug
 dump.rdb
+debug.txt
