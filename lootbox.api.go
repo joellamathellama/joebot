@@ -167,7 +167,6 @@ func getPlayerStats(bnetID string, platform string) string {
 	if err != nil {
 		writeErr(err)
 		return "Somethings wrong with lootbox!"
-		// panic(err)
 	}
 	defer res.Body.Close()
 
@@ -176,7 +175,6 @@ func getPlayerStats(bnetID string, platform string) string {
 	if err != nil {
 		writeErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
-		// panic(err)
 	}
 
 	// Unmarshal JSON data into struct
@@ -189,7 +187,6 @@ func getPlayerStats(bnetID string, platform string) string {
 	if err := json.Unmarshal(body, &statsStruct); err != nil {
 		writeErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
-		// panic(err)
 	}
 
 	messageToSend := ""
