@@ -24,7 +24,7 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
-	cmdResList["help"] = "Shoutout to ssherder and lootbox for their APIs.\n\n*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile/PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile/Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*(Except Bnet Tags)"
+	cmdResList["help"] = "Shoutout to ssherder.com and api.lootbox.eu/documentation#/ for their APIs.\n\n*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile/PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile/Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*(Except Bnet Tags)"
 }
 
 // This function will be called (due to AddHandler) every time a new
