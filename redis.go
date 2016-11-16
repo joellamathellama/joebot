@@ -40,11 +40,11 @@ func redisSet(c *redis.Client, key string, value string) {
 	}
 }
 
-func redisGet(c *redis.Client, key string) string {
+func redisGet(c *redis.Client, key string) (val string) {
 	val, err := c.Get(key).Result()
 	if err != nil {
 		writeErr(err)
 		fmt.Println(err)
 	}
-	return val
+	return
 }

@@ -6,11 +6,12 @@ import (
 	// "bytes"
 	// "encoding/gob"
 	// "bufio"
+	// "reflect"
 	// "io/ioutil"
 	"log"
 	"os"
 	"regexp"
-	"time"
+	// "time"
 )
 
 func stringInSlice(str string, list []string) bool {
@@ -42,8 +43,30 @@ func writeLog(logString string) {
 		CreateFile(path)
 	}
 
-	today := time.Now()
-	finalLog := fmt.Sprintf("%s: %s", today, logString)
+	// f, err := os.Create(path)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		checkError(err)
+	}
+	defer f.Close()
+
+	// w := bufio.NewWriter(f)
+	// _, err = w.WriteString(logString)
+	// checkError(err)
+
+	// w.Flush()
+
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetOutput(f)
+	log.Println(logString)
+}
+
+func writeErr(err error) {
+	if !FileExists(path) {
+		CreateFile(path)
+	}
+
+	logString := err.Error()
 
 	// f, err := os.Create(path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -58,27 +81,7 @@ func writeLog(logString string) {
 
 	// w.Flush()
 
-	log.SetOutput(f)
-	log.Println(finalLog)
-}
-
-func writeErr(err error) {
-	logString := err.Error()
-	today := time.Now()
-	logString = fmt.Sprintf("%s: %s", today, logString)
-
-	f, err := os.Create(path)
-	if err != nil {
-		checkError(err)
-	}
-	defer f.Close()
-
-	// w := bufio.NewWriter(f)
-	// _, err = w.WriteString(logString)
-	// checkError(err)
-
-	// w.Flush()
-
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	log.SetOutput(f)
 	log.Println(logString)
 }
