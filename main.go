@@ -21,19 +21,23 @@ var (
 )
 
 func init() {
+	writeLog("Bot Initializing")
 	// Set flag variables
 	flag.StringVar(&Token, "t", "", "Account Token")
 	flag.Parse()
 
 	// Initiate redis
-	fmt.Println("Init Redis. Expect: No return")
+	fmt.Println("Init Redis. Expect: No response")
 	redisInit()
+	// Flush Redis
+	fmt.Println("Flushing ALL Keys in ALL Databases")
+	rc.FlushAll()
 	// Test redis Set & Get
-	fmt.Println("Redis Set & Get test. Expect: No return")
+	fmt.Println("Redis Set & Get test. Expect: No response")
 	redisSet(rc, "redis_test_key", "redis_test_value")
 	redisGet(rc, "redis_test_key")
 	// Test invalid query
-	fmt.Println("Redis invalid query test. Expect: 'Invalid Key'")
+	fmt.Println("Redis invalid query test. Expect: 'redis: nil'")
 	redisGet(rc, "nope")
 
 	// Ssherder API call(s)
@@ -51,13 +55,17 @@ func ssherderApis() {
 
 func whenReady(s *dg.Session, event *dg.Ready) {
 	// Set the playing status.
-	_ = s.UpdateStatus(0, "Type: '~joebot help'")
+	if err = s.UpdateStatus(0, "Type: '~joebot help'"); err != nil {
+		writeErr(err)
+		fmt.Println(err)
+	}
 }
 
 func main() {
 	// Create a new Discord session using the bot token
 	dg, err := dg.New(Token)
 	if err != nil {
+		writeErr(err)
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
@@ -65,6 +73,7 @@ func main() {
 	// Get the account information.
 	u, err := dg.User("@me")
 	if err != nil {
+		writeErr(err)
 		fmt.Println("error obtaining account details,", err)
 	}
 
@@ -79,6 +88,7 @@ func main() {
 
 	// Open the websocket and begin listening.
 	if err = dg.Open(); err != nil {
+		writeErr(err)
 		fmt.Println("error opening connection,", err)
 		return
 	}

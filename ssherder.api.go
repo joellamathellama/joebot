@@ -68,19 +68,27 @@ type expectedSkills struct {
 func getPlayers() {
 	res, err := http.Get("https://ssherder.com/data-api/characters/")
 	if err != nil {
-		panic(err)
+		writeErr(err)
+		fmt.Println("Somethings wrong with Ssherder!")
+		return
 	}
 	defer res.Body.Close()
 
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		panic(err.Error())
+		writeErr(err)
+		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
+		return
 	}
 
 	// Unmarshal JSON data into struct
 	var playerStruct []expectedPlayers
-	json.Unmarshal(body, &playerStruct)
+	if err := json.Unmarshal(body, &playerStruct); err != nil {
+		writeErr(err)
+		fmt.Println("Error with: json.Unmarshal(body, &playerStruct)")
+		return
+	}
 
 	// loop and store
 	for i := 0; i < len(playerStruct); i++ {
@@ -89,64 +97,62 @@ func getPlayers() {
 		playerMap["ID"] = strconv.Itoa(playerStruct[i].ID)
 		playerMap["Stones"] = strings.Join(playerStruct[i].Stones, ", ")
 
-		// instead of storing skill id's([#, #, #, #, #])
-		// do a lookup on those ids to get the skill data
-		// concat all the skill data, and then set it in the playerMap
-		// use callback to make sure skills are called first, then this player call
-		skillString := ""
-		ace := ""
-		active := ""
-		passives := ""
+		var (
+			skillString string
+			active      string
+			passives    string
+		)
 		for k := 0; k < len(playerStruct[i].Skills); k++ {
-			// TODO: Use HGetAll instead
+			// Define hash key, HGetAll, assign skill info
+			hashKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
 
-			nameKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
-			skillName, err := rc.HGet(nameKey, "Name").Result()
+			skillHash, err := rc.HGetAll(hashKey).Result()
 			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillName)
+				writeErr(err)
+				fmt.Println("Error getting Skill Hash")
 			}
 
-			descKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
-			skillDesc, err := rc.HGet(descKey, "Description").Result()
-			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillDesc)
-			}
+			skillName := skillHash["Name"]
+			skillDesc := skillHash["Description"]
+			skillCat := skillHash["Category"]
+			skillCost := skillHash["SpiritCost"]
+			skillCD := skillHash["Cooldown"]
 
-			catKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
-			skillCat, err := rc.HGet(catKey, "Category").Result()
-			if err != nil {
-				panic(err)
-			} else {
-				// fmt.Println(skillCat)
-			}
+			// How I want one line printed
+			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, strings.Title(skillCat), skillDesc)
 
-			// How I want it printed
-			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, skillCat, skillDesc)
-
-			// Order I want it printed
-			if skillCat == "ace" { // Only one ace and active per player
-				ace = skillInfo
-			} else if skillCat == "active" {
-				active = skillInfo
-			} else { // Three passive skills per player
+			if skillCat == "ace" { // ace is always first
+				skillString = skillInfo
+			} else if skillCat == "active" { // active skills have a unique print
+				active = fmt.Sprintf("**%s** [%s, %sspirit, %sm] \n%s\n\n", skillName, strings.Title(skillCat), skillCost, skillCD, skillDesc)
+			} else { // Multiple passives per player
 				passives = passives + skillInfo
 			}
 
-			skillString = ace
+			// Order I want it all in after ace: active > passives
 			skillString = skillString + active
 			skillString = skillString + passives
 		}
 		playerMap["Skills"] = skillString
 
+		// Example name: "Z101 Raklet"
+		// Split it: ["Z101", "Raklet"]
+		// Create the same player entries the keys: "Z101 Raklet", "Z101", and "Raklet"
+		playerName := playerStruct[i].Name
+		splitName := strings.Split(playerName, " ")
+
 		stringID := strconv.Itoa(playerStruct[i].ID) // stringify ID
 		keyID := string(stringID[0])                 // grab first index in string form
 		lookupKey := playerStruct[i].Name + "_" + keyID
 
-		rc.HMSet(lookupKey, playerMap)
+		// set full name, then loop over(if two or more) splitName
+		rc.HMSet(strings.Title(lookupKey), playerMap)
+		if len(splitName) > 1 {
+			for x := 0; x < len(splitName); x++ {
+				splitKey := fmt.Sprintf("%s_%s", strings.Title(splitName[x]), keyID)
+				rc.HMSet(splitKey, playerMap)
+			}
+		}
 	}
 
 	// _, err := io.Copy(os.Stdout, res.Body)
@@ -158,23 +164,33 @@ func getPlayers() {
 func getSkills() {
 	res, err := http.Get("https://ssherder.com/data-api/skills/")
 	if err != nil {
-		panic(err)
+		writeErr(err)
+		fmt.Println("Api Server is down!")
+		return
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		panic(err.Error())
+		writeErr(err)
+		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
+		return
 	}
 
 	var skillsStruct []expectedSkills
-	json.Unmarshal(body, &skillsStruct)
+	if err := json.Unmarshal(body, &skillsStruct); err != nil {
+		writeErr(err)
+		fmt.Println("Error with: json.Unmarshal(body, &skillsStruct)")
+		return
+	}
 
 	// ID(stringified) to lookup
 	for i := 0; i < len(skillsStruct); i++ {
 		skillsMap := make(map[string]string)
 		skillsMap["Name"] = skillsStruct[i].Name
 		skillsMap["Category"] = skillsStruct[i].Category
+		skillsMap["Cooldown"] = strconv.Itoa(skillsStruct[i].Cooldown)
+		skillsMap["SpiritCost"] = skillsStruct[i].SpiritCost
 
 		// skillsMap["Description"] = skillsStruct[i].Description
 		editDesc := skillsStruct[i].Description
