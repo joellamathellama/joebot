@@ -99,9 +99,11 @@ func getPlayers() {
 
 		var (
 			skillString string
+			ace         string
 			active      string
 			passives    string
 		)
+
 		for k := 0; k < len(playerStruct[i].Skills); k++ {
 			// Define hash key, HGetAll, assign skill info
 			hashKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
@@ -121,18 +123,19 @@ func getPlayers() {
 			// How I want one line printed
 			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, strings.Title(skillCat), skillDesc)
 
-			if skillCat == "ace" { // ace is always first
-				skillString = skillInfo
+			if skillCat == "ace" {
+				ace = skillInfo
 			} else if skillCat == "active" { // active skills have a unique print
 				active = fmt.Sprintf("**%s** [%s, %sspirit, %sm] \n%s\n\n", skillName, strings.Title(skillCat), skillCost, skillCD, skillDesc)
 			} else { // Multiple passives per player
 				passives = passives + skillInfo
 			}
-
-			// Order I want it all in after ace: active > passives
-			skillString = skillString + active
-			skillString = skillString + passives
 		}
+		// Order I want it all in after ace: active > passives
+		skillString = ace
+		skillString = skillString + active
+		skillString = skillString + passives
+
 		playerMap["Skills"] = skillString
 
 		// Example name: "Z101 Raklet"
@@ -149,8 +152,17 @@ func getPlayers() {
 		rc.HMSet(strings.Title(lookupKey), playerMap)
 		if len(splitName) > 1 {
 			for x := 0; x < len(splitName); x++ {
+				// check if it exists already
 				splitKey := fmt.Sprintf("%s_%s", strings.Title(splitName[x]), keyID)
-				rc.HMSet(splitKey, playerMap)
+				exists, err := rc.Exists(splitKey).Result()
+				if err != nil {
+					writeErr(err)
+					return
+				} else if !exists {
+					rc.HMSet(splitKey, playerMap)
+				} else {
+					continue
+				}
 			}
 		}
 	}

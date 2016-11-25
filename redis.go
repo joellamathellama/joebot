@@ -32,16 +32,18 @@ func redisInit() {
 	// redisGet(rc, "test key")
 }
 
-func redisSet(c *redis.Client, key string, value string) {
+func redisSet(c *redis.Client, key string, value string) bool {
 	err := c.Set(key, value, 0).Err()
 	if err != nil {
 		writeErr(err)
 		fmt.Println(err)
+		return false
 	}
+	return true
 }
 
-func redisGet(c *redis.Client, key string) (val string) {
-	val, err := c.Get(key).Result()
+func redisGet(c *redis.Client, key string) (val string, err error) {
+	val, err = c.Get(key).Result()
 	if err != nil {
 		writeErr(err)
 		fmt.Println(err)

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-
 	dg "github.com/bwmarrin/discordgo"
 )
 
@@ -27,15 +26,23 @@ func init() {
 	flag.Parse()
 
 	// Initiate redis
-	fmt.Println("Init Redis. Expect: No response")
+	fmt.Println("Init Redis. Expect no response")
 	redisInit()
 	// Flush Redis
-	fmt.Println("Flushing ALL Keys in ALL Databases")
-	rc.FlushAll()
+	// fmt.Println("Flushing ALL Keys in ALL Databases")
+	// rc.FlushAll()
 	// Test redis Set & Get
 	fmt.Println("Redis Set & Get test. Expect: No response")
-	redisSet(rc, "redis_test_key", "redis_test_value")
-	redisGet(rc, "redis_test_key")
+	ok := redisSet(rc, "redis_test_key", "redis_test_value")
+	if !ok {
+		writeLog("Redis Set Failed")
+		fmt.Println("Redis Set Failed")
+	}
+	_, err := redisGet(rc, "redis_test_key")
+	if err != nil {
+		writeErr(err)
+		fmt.Println("Redis Get Failed")
+	}
 	// Test invalid query
 	fmt.Println("Redis invalid query test. Expect: 'redis: nil'")
 	redisGet(rc, "nope")
@@ -55,7 +62,7 @@ func ssherderApis() {
 
 func whenReady(s *dg.Session, event *dg.Ready) {
 	// Set the playing status.
-	if err = s.UpdateStatus(0, "Type: '~joebot help'"); err != nil {
+	if err = s.UpdateStatus(0, "~joebot help"); err != nil {
 		writeErr(err)
 		fmt.Println(err)
 	}

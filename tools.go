@@ -7,6 +7,7 @@ import (
 	// "encoding/gob"
 	// "bufio"
 	// "reflect"
+	"runtime"
 	// "io/ioutil"
 	"log"
 	"os"
@@ -38,7 +39,14 @@ func regexpMatch(regex string, word string) bool {
 
 var path = "debug.txt"
 
-func writeLog(logString string) {
+func writeLog(msg string) {
+	_, file, line, ok := runtime.Caller(1)
+	if ok != true {
+		file = "Unknown File"
+		line = 0
+	}
+	logMsg := fmt.Sprintf("%s %d: %s", file, line, msg)
+
 	if !FileExists(path) {
 		CreateFile(path)
 	}
@@ -51,22 +59,28 @@ func writeLog(logString string) {
 	defer f.Close()
 
 	// w := bufio.NewWriter(f)
-	// _, err = w.WriteString(logString)
+	// _, err = w.WriteString(logMsg)
 	// checkError(err)
 
 	// w.Flush()
 
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetFlags(log.Ldate | log.Ltime) // Llongfile/Lshortfile only showed tools.go #, not where it was called
 	log.SetOutput(f)
-	log.Println(logString)
+	log.Println(logMsg)
 }
 
 func writeErr(err error) {
+	errString := err.Error()
+	_, file, line, ok := runtime.Caller(1)
+	if ok != true {
+		file = "Unknown File"
+		line = 0
+	}
+	errMsg := fmt.Sprintf("%s %d: %s", file, line, errString)
+
 	if !FileExists(path) {
 		CreateFile(path)
 	}
-
-	logString := err.Error()
 
 	// f, err := os.Create(path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -76,14 +90,14 @@ func writeErr(err error) {
 	defer f.Close()
 
 	// w := bufio.NewWriter(f)
-	// _, err = w.WriteString(logString)
+	// _, err = w.WriteString(errMsg)
 	// checkError(err)
 
 	// w.Flush()
 
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	log.SetFlags(log.Ldate | log.Ltime)
 	log.SetOutput(f)
-	log.Println(logString)
+	log.Println(errMsg)
 }
 
 func FileExists(name string) bool {

@@ -24,6 +24,8 @@ func botResInit() {
 	cmdResList["ourteams"] = "https://docs.google.com/spreadsheets/d/1ykMKW64o71OSfOEtx-iIa25jSZCFVRcZQ73ErXEoFpc/edit#gid=0"
 	cmdResList["apoc"] = "http://soccerspirits.freeforums.net/thread/69/guide-apocalypse-player-tier-list"
 	cmdResList["reddit"] = "http://reddit.com/r/soccerspirits"
+	cmdResList["teamwork"] = "https://docs.google.com/spreadsheets/d/1x0Q4vUk_V3wUwzM5XR_66xytSbapoSFm_cHR9PYIERs/htmlview?sle=true#"
+	cmdResList["chains"] = "https://ssherder.com/characters/#"
 	cmdResList["help"] = "Shoutout to ssherder.com and api.lootbox.eu/documentation#/ for their APIs.\n\n*Overwatch Commands:*\n**Lookup PC Profile:** '~joebot PCprofile <Battlenet Tag>' (Ex. ~joebot pcprofile joellama#1114)\n**Lookup PC Stats:** '~joebot PCstats <Battlenet Tag>' (Ex. ~joebot pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile/PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile/Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~joebot Story, Stones, Ssherder or Skills <Player Name>' (Ex. ~joebot stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~joebot apoc)\n\n*Everything is case *insensitive!*(Except Bnet Tags)"
 }
 
@@ -33,6 +35,9 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	// c = users message, cID = channel ID
 	c := m.Content
 	cID = m.ChannelID
+
+	// Info
+	sender := m.Author.Username
 
 	// Ignore all messages created by the bot itself and anything short of "~joebot "
 	if m.Author.ID == BotID {
@@ -59,6 +64,12 @@ func messageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		ssherderRouteSS(s, c[17:])
 	} else if regexpMatch("(?i)(Skills)[ ][a-zA-Z0-9]", c[8:]) {
 		skillsRouteSS(s, c[15:])
+	} else if regexpMatch("(?i)(MyTeam)", c[8:]) {
+		if len(c[8:]) > 7 {
+			myTeamRouteSS(s, sender, c[15:])
+		} else {
+			myTeamRouteSS(s, sender, "GET")
+		}
 		/* OVERWATCH */
 	} else if regexpMatch("(?i)(PCprofile)[ ][a-zA-Z0-9]", c[8:]) {
 		profileRouteOW(s, c[18:], "pc")
@@ -151,6 +162,27 @@ func skillsRouteSS(s *dg.Session, playerName string) {
 		messageSend(s, "Player's skills not found. Sharpen your typing skills first...")
 	} else {
 		messageSend(s, res)
+	}
+}
+
+func myTeamRouteSS(s *dg.Session, sender string, url string) {
+	if url == "GET" {
+		// redis get persons team image
+		link, err := redisGet(rc, sender)
+		if err != nil {
+			messageSend(s, "You have not set your team image.")
+		} else {
+			messageSend(s, link)
+		}
+	} else {
+		// else set the url
+		ok := redisSet(rc, sender, url)
+		if !ok {
+			messageSend(s, "Something went wrong, alert the Master Llama!")
+		} else {
+			messageSend(s, "Team image set!")
+		}
+
 	}
 }
 
