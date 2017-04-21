@@ -1,9 +1,11 @@
-package main
+package api
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"joebot/rds"
+	"joebot/tools"
 	"net/http"
 	"strings"
 	// "reflect"
@@ -86,11 +88,11 @@ import (
 
 // Example Player info API: https://api.lootbox.eu/pc/us/jawnkeem-1982/profile
 
-func getPlayerProfile(bnetID string, platform string) string {
+func GetPlayerProfile(bnetID string, platform string) string {
 	url := fmt.Sprintf("https://api.lootbox.eu/%s/us/%s/profile", platform, bnetID)
 	res, err := http.Get(url)
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		return "Api Server is down!"
 	}
 	defer res.Body.Close()
@@ -98,7 +100,7 @@ func getPlayerProfile(bnetID string, platform string) string {
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 	}
 
@@ -106,7 +108,7 @@ func getPlayerProfile(bnetID string, platform string) string {
 	// var profileStruct []expectedPlayerProfile
 	var profileStruct interface{}
 	if err := json.Unmarshal(body, &profileStruct); err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 	}
 
@@ -156,16 +158,16 @@ func getPlayerProfile(bnetID string, platform string) string {
 	playerHash := fmt.Sprintf("%s%s", bnetID, platform)
 	redisMap := make(map[string]string)
 	redisMap["profile"] = messageToSend
-	rc.HMSet(playerHash, redisMap)
+	rds.RC.HMSet(playerHash, redisMap)
 
 	return messageToSend
 }
 
-func getPlayerStats(bnetID string, platform string) string {
+func GetPlayerStats(bnetID string, platform string) string {
 	url := fmt.Sprintf("https://api.lootbox.eu/%s/us/%s/quick-play/allHeroes/", platform, bnetID)
 	res, err := http.Get(url)
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		return "Somethings wrong with lootbox!"
 	}
 	defer res.Body.Close()
@@ -173,7 +175,7 @@ func getPlayerStats(bnetID string, platform string) string {
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 	}
 
@@ -185,7 +187,7 @@ func getPlayerStats(bnetID string, platform string) string {
 
 	var statsStruct interface{}
 	if err := json.Unmarshal(body, &statsStruct); err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		return fmt.Sprintf("**error:** Found no user with the BattleTag: %s", strings.Replace(bnetID, "-", "#", -1))
 	}
 
@@ -203,7 +205,7 @@ func getPlayerStats(bnetID string, platform string) string {
 	playerHash := fmt.Sprintf("%s%s", bnetID, platform)
 	redisMap := make(map[string]string)
 	redisMap["stats"] = messageToSend
-	rc.HMSet(playerHash, redisMap)
+	rds.RC.HMSet(playerHash, redisMap)
 
 	return messageToSend
 }
