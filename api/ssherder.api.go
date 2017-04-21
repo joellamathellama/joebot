@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	// "reflect"
 	// "regexp"
+	"joebot/rds"
+	"joebot/tools"
 	"strconv"
 	"strings"
 	// "io"
@@ -61,14 +63,26 @@ type expectedSkills struct {
 	SpiritCost      string          `json:"spirit_cost"`
 }
 
+type expectedStones struct {
+	ID        int    `json:"id"`
+	Element   string `json:"element"`
+	Icon      string `json:"icon"`
+	Name      string `json:"name"`
+	Rarity    int    `json:"rarity"`
+	Type      string `json:"type"`
+	Zodiac    string `json:"zodiac"`
+	EvolvesTo int    `json:"evolves_to"`
+	Skills    []int  `json:"skills"`
+}
+
 // HOST: https://ssherder.com
 // Players: /data-api/characters/
 // Skills: /data-api/skills/
 
-func getPlayers() {
+func GetPlayers() {
 	res, err := http.Get("https://ssherder.com/data-api/characters/")
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		fmt.Println("Somethings wrong with Ssherder!")
 		return
 	}
@@ -77,7 +91,7 @@ func getPlayers() {
 	// ReadAll to a byte array for Unmarshal
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
 		return
 	}
@@ -85,7 +99,7 @@ func getPlayers() {
 	// Unmarshal JSON data into struct
 	var playerStruct []expectedPlayers
 	if err := json.Unmarshal(body, &playerStruct); err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		fmt.Println("Error with: json.Unmarshal(body, &playerStruct)")
 		return
 	}
@@ -108,9 +122,9 @@ func getPlayers() {
 			// Define hash key, HGetAll, assign skill info
 			hashKey := "skill_" + strconv.Itoa(playerStruct[i].Skills[k])
 
-			skillHash, err := rc.HGetAll(hashKey).Result()
+			skillHash, err := rds.RC.HGetAll(hashKey).Result()
 			if err != nil {
-				writeErr(err)
+				tools.WriteErr(err)
 				fmt.Println("Error getting Skill Hash")
 			}
 
@@ -126,7 +140,7 @@ func getPlayers() {
 			if skillCat == "ace" {
 				ace = skillInfo
 			} else if skillCat == "active" { // active skills have a unique print
-				active = fmt.Sprintf("**%s** [%s, %sspirit, %sm] \n%s\n\n", skillName, strings.Title(skillCat), skillCost, skillCD, skillDesc)
+				active = fmt.Sprintf("**%s** [%s, %s spirit, %sm] \n%s\n\n", skillName, strings.Title(skillCat), skillCost, skillCD, skillDesc)
 			} else { // Multiple passives per player
 				passives = passives + skillInfo
 			}
@@ -148,18 +162,21 @@ func getPlayers() {
 		keyID := string(stringID[0])                 // grab first index in string form
 		lookupKey := playerStruct[i].Name + "_" + keyID
 
+		// Store Character's name by Ssherder IDs
+		rds.RedisSet(rds.RC, playerMap["ID"], playerName)
+
 		// set full name, then loop over(if two or more) splitName
-		rc.HMSet(strings.Title(lookupKey), playerMap)
+		rds.RC.HMSet(strings.Title(lookupKey), playerMap)
 		if len(splitName) > 1 {
 			for x := 0; x < len(splitName); x++ {
 				// check if it exists already
 				splitKey := fmt.Sprintf("%s_%s", strings.Title(splitName[x]), keyID)
-				exists, err := rc.Exists(splitKey).Result()
+				exists, err := rds.RC.Exists(splitKey).Result()
 				if err != nil {
-					writeErr(err)
+					tools.WriteErr(err)
 					return
 				} else if !exists {
-					rc.HMSet(splitKey, playerMap)
+					rds.RC.HMSet(splitKey, playerMap)
 				} else {
 					continue
 				}
@@ -167,16 +184,19 @@ func getPlayers() {
 		}
 	}
 
+	// Skill info is saved, now...
+	// Also save other player info under a UUID key
+
 	// _, err := io.Copy(os.Stdout, res.Body)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
 }
 
-func getSkills() {
+func GetSkills() {
 	res, err := http.Get("https://ssherder.com/data-api/skills/")
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		fmt.Println("Api Server is down!")
 		return
 	}
@@ -184,14 +204,14 @@ func getSkills() {
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
 		return
 	}
 
 	var skillsStruct []expectedSkills
 	if err := json.Unmarshal(body, &skillsStruct); err != nil {
-		writeErr(err)
+		tools.WriteErr(err)
 		fmt.Println("Error with: json.Unmarshal(body, &skillsStruct)")
 		return
 	}
@@ -207,37 +227,47 @@ func getSkills() {
 		// skillsMap["Description"] = skillsStruct[i].Description
 		editDesc := skillsStruct[i].Description
 
-		// [#][1] + [#][2] * 4 = skill maxed out
-		// recursively look for {#} and replace it based on the #
 		// ch := make(chan bool)
 		// finalDesc := replaceDesc(editDesc, skillsStruct[i].Effects, ch)
-		finalDesc := replaceDesc(editDesc, skillsStruct[i].Effects)
+		finalDesc := replaceDesc(editDesc, skillsStruct[i].Effects, skillsStruct[i].Category)
 		// <-ch
 		// // fmt.Println(finalDesc)
 		skillsMap["Description"] = finalDesc
 
 		lookupKey := "skill_" + strconv.Itoa(skillsStruct[i].ID)
-		// fmt.Println(lookupKey, reflect.TypeOf(lookupKey))
-		rc.HMSet(lookupKey, skillsMap)
+		rds.RC.HMSet(lookupKey, skillsMap)
 	}
 }
 
-func replaceDesc(s string, i [][]interface{}) string {
+/*
+	replaceDesc() replaces all variables in skill description string with correct values
+	[#][1] + [#][2] * 4 = skill maxed out
+*/
+func replaceDesc(s string, i [][]interface{}, cat string) string {
 	final := s
 	for x := 0; x < len(i); x++ {
 		find := fmt.Sprintf("{%d}", x)
 		base := i[x][1].(string)
 		multi := i[x][2].(string)
 
-		// fmt.Println(x, find, len(i), base, multi)
-
 		// convert to int for calculation
 		baseVerted, _ := strconv.ParseFloat(base, 64)
 		multiVerted, _ := strconv.ParseFloat(multi, 64)
 		baseInt := int(baseVerted)
-		multiInt := int(multiVerted * 4)
-		// calculate then convert back to string for string replacement
+		var multiInt int
+		if cat == "item" { // multiplier is higher for UQ stones("items")
+			multiInt = int(multiVerted * 16)
+		} else if cat == "ace" {
+			multiInt = int(multiVerted)
+		} else {
+			multiInt = int(multiVerted * 4)
+		}
+		// convert back to string for string replacement
 		replacement := strconv.Itoa((baseInt + multiInt))
+		// If Burst Ace
+		if cat == "ace" && multi != "0.000" {
+			replacement = fmt.Sprintf("%d%%/%s", baseInt, replacement)
+		}
 		final = strings.Replace(final, find, replacement, -1)
 
 		// fmt.Println(s, find, replacement, final)
@@ -245,39 +275,99 @@ func replaceDesc(s string, i [][]interface{}) string {
 	return final
 }
 
-// FAILED ATTEMPT AT USING REGEX + RECURSION :C
-// Keeping it cause why not
-// func replaceDesc(s string, i [][]interface{}) string {
-// 	re := regexp.MustCompile("[{][0-9][}]")
-// 	a := re.FindStringIndex(s) // [start_index end_index]
-// 	// if no index exit
-// 	if len(a) == 0 {
-// 		return s
+func GetStones() {
+	res, err := http.Get("https://ssherder.com/data-api/stones/")
+	if err != nil {
+		tools.WriteErr(err)
+		fmt.Println("Api Server is down!")
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		tools.WriteErr(err)
+		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
+		return
+	}
+
+	var stoneStruct []expectedStones
+	if err := json.Unmarshal(body, &stoneStruct); err != nil {
+		tools.WriteErr(err)
+		fmt.Println("Error with: json.Unmarshal(body, &stoneStruct)")
+		return
+	}
+
+	// concat description string and set in redis
+	/*
+		<Name>
+		<Element> Unique
+		<Skill 1>
+		<Skill 2>
+	*/
+
+	for x := 0; x < len(stoneStruct); x++ {
+		var (
+			stoneName string
+			skillDesc string
+		)
+		// if rarity 4+
+		if stoneStruct[x].Rarity >= 4 {
+			stoneName = stoneStruct[x].Name
+			// fmt.Println(stoneName)
+			skillDesc = fmt.Sprintf("**%s**\n", stoneName)
+			skillDesc = fmt.Sprintf("%s%s *%s*\n", skillDesc, stoneStruct[x].Element, stoneStruct[x].Type)
+
+			// HGET skill descriptions
+			// Pretty up and store
+			if len(stoneStruct[x].Skills) > 0 {
+				for z := 0; z < len(stoneStruct[x].Skills); z++ {
+					stoneSkillKey := fmt.Sprintf("skill_%d", stoneStruct[x].Skills[z])
+					stoneSkillHash, err := rds.RC.HGetAll(stoneSkillKey).Result()
+					if err != nil {
+						tools.WriteErr(err)
+					}
+					skillDesc = fmt.Sprintf("%s%s\n", skillDesc, stoneSkillHash["Description"])
+				}
+			}
+		}
+		// Key example: stone_stone name, stone_stone, and stone_name
+		// split the name if it contains any spaces
+		if len(stoneName) != 0 {
+			// stoneKey := fmt.Sprintf("stone_%s", strings.Title(stoneName))
+			stoneKey := fmt.Sprintf("stone_%s", stoneName)
+			splitName := strings.Split(stoneName, " ")
+			ok := rds.RedisSet(rds.RC, stoneKey, skillDesc)
+			if !ok {
+				tools.WriteLog("Error: getStones() redisSet failed!")
+			}
+			if len(splitName) > 1 {
+				for k := 0; k < len(splitName); k++ {
+					splitKey := fmt.Sprintf("stone_%s", splitName[k])
+					ok = rds.RedisSet(rds.RC, splitKey, strings.Title(skillDesc))
+					if !ok {
+						tools.WriteLog("Error: getStones() redisSet failed!")
+					}
+				}
+			}
+		}
+	}
+}
+
+// func getChains() {
+// 	res, err := http.Get("https://ssherder.com/data-api/chains/")
+// 	if err != nil {
+// 		tools.WriteErr(err)
+// 		fmt.Println("Api Server is down!")
+// 		return
 // 	}
-// 	// grab the # between the {}
-// 	b := a[0] + 1
-// 	// type assertion to access the stringified numbers
-// 	base := ""
-// 	multi := ""
-// 	f, _ := strconv.Atoi(string(s[b]))
+// 	defer res.Body.Close()
 
-// 	if len(i) >= (f + 1) {
-// 		base = i[f][1].(string)
-// 		multi = i[f][2].(string)
-// 	} else {
-// 		base = "0"
-// 		multi = "0"
+// 	body, err := ioutil.ReadAll(res.Body)
+// 	if err != nil {
+// 		tools.WriteErr(err)
+// 		fmt.Println("Error with: ioutil.ReadAll(res.Body)")
+// 		return
 // 	}
 
-// 	// convert to int for calculation
-// 	baseVerted, _ := strconv.ParseFloat(base, 64)
-// 	multiVerted, _ := strconv.ParseFloat(multi, 64)
-// 	baseInt := int(baseVerted)
-// 	multiInt := int(multiVerted * 4)
-
-// 	// calculate then convert back to string for string replacement
-// 	finalNum := strconv.Itoa((baseInt + multiInt))
-
-// 	c := re.ReplaceAllString(s, finalNum)
-// 	return replaceDesc(c, i)
 // }
