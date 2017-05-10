@@ -7,7 +7,7 @@ import (
 	"joebot/api"
 	"joebot/rds"
 	"joebot/routes"
-	"joebot/tools"
+	t "joebot/tools"
 )
 
 var (
@@ -21,7 +21,7 @@ func init() {
 	// Init DB
 	// initDB()
 
-	tools.WriteLog("Bot Initializing")
+	t.WriteLog("Bot Initializing")
 	// Set flag variables
 	flag.StringVar(&Token, "t", "", "Account Token")
 	flag.Parse()
@@ -30,18 +30,18 @@ func init() {
 	fmt.Println("Init Redis. Expect no panic")
 	rds.RedisInit()
 	// Flush Redis
-	// fmt.Println("Flushing ALL Keys in ALL Databases")
-	// rds.RC.FlushAll()
+	fmt.Println("Flushing ALL Keys in ALL Databases")
+	rds.RC.FlushAll()
 	// Test redis Set & Get
 	fmt.Println("Redis Set & Get test. Expect no panic")
 	ok := rds.RedisSet(rds.RC, "redis_test_key", "redis_test_value")
 	if !ok {
-		tools.WriteLog("Redis Set Failed")
+		t.WriteLog("Redis Set Failed")
 		fmt.Println("Redis Set Failed")
 	}
 	_, err = rds.RedisGet(rds.RC, "redis_test_key")
 	if err != nil {
-		tools.WriteErr(err)
+		t.WriteErr(err)
 		fmt.Println("Redis Get Failed")
 	}
 	// Test invalid query
@@ -52,31 +52,54 @@ func init() {
 	// Called once on init and stored into Redis
 	ssherderApis()
 
+	// DWU JSON to Redis
+	dwuToRedis()
+
 	// Create map of quick responses
 	routes.BotResInit()
 }
 
-/* calls functions that GET Soccer Spirits player data */
+/* api calls */
 func ssherderApis() {
+	t.WriteLog("ssherderApis()")
 	api.GetSkills()
 	api.GetPlayers()
 	api.GetStones()
 }
 
+/* dwu json to redis */
+func dwuToRedis() {
+	t.WriteLog("dwuToRedis()")
+
+	api.OfficersToRedis()
+
+	list := [5]string{"wei", "shu", "wu", "other", "jin"}
+	for ii := 0; ii < len(list); ii++ {
+		api.PassivesToRedis(list[ii])
+	}
+}
+
 /* whenReady sets current user's(the bot) status */
 func whenReady(s *dg.Session, event *dg.Ready) {
 	// Set the playing status.
-	if err = s.UpdateStatus(0, "~joebot help"); err != nil {
-		tools.WriteErr(err)
+	t.WriteLog("whenReady()")
+
+	bStatus := "~jb help"
+	if err = s.UpdateStatus(0, bStatus); err != nil {
+		t.WriteErr(err)
 		fmt.Println(err)
+	} else {
+		bS := fmt.Sprintf("Update Status: %s", bStatus)
+		t.WriteLog(bS)
 	}
 }
 
 func main() {
 	// Create a new Discord session using the bot token
+	t.WriteLog("main()")
 	dg, err := dg.New(Token)
 	if err != nil {
-		tools.WriteErr(err)
+		t.WriteErr(err)
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
@@ -84,7 +107,7 @@ func main() {
 	// Get the account information.
 	u, err := dg.User("@me")
 	if err != nil {
-		tools.WriteErr(err)
+		t.WriteErr(err)
 		fmt.Println("error obtaining account details,", err)
 	}
 
@@ -99,12 +122,16 @@ func main() {
 
 	// Open the websocket and begin listening.
 	if err = dg.Open(); err != nil {
-		tools.WriteErr(err)
+		t.WriteErr(err)
 		fmt.Println("error opening connection,", err)
 		return
+	} else {
+		t.WriteLog("Discord websocket connection open")
 	}
 
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	wLog := "Bot is now running.  Press CTRL-C to exit."
+	t.WriteLog(wLog)
+	fmt.Println(wLog)
 
 	// Simple way to keep program running until CTRL-C is pressed.
 	<-make(chan struct{})

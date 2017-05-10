@@ -33,6 +33,11 @@ func RegexpMatch(regex string, word string) bool {
 	return res
 }
 
+func MarkdownWrap(msg string) (mm string) {
+	mm = fmt.Sprintf("```md\n%s\n```\n", msg)
+	return
+}
+
 /*
 	DEBUG LOGGING
 */

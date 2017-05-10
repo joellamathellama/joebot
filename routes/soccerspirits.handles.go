@@ -63,7 +63,7 @@ func skillsRouteSS(s *dg.Session, playerName string) {
 func stoneRouteSS(s *dg.Session, stoneName string) {
 	// rds.RedisGet(key)
 	// if else error
-	stoneTitle := strings.Title(stoneName)
+	stoneTitle := strings.ToLower(stoneName)
 	stoneKey := fmt.Sprintf("stone_%s", stoneTitle)
 	res, err := rds.RedisGet(rds.RC, stoneKey)
 	if err != nil {
@@ -80,19 +80,19 @@ func myTeamRouteSS(s *dg.Session, sender string, url string) {
 		link, err := rds.RedisGet(rds.RC, sender)
 		if err != nil {
 			tools.WriteErr(err)
-			messageSend(s, "You have not set your team!")
+			messageSend(s, "No note has been set!")
 		} else {
 			messageSend(s, link)
 		}
 	} else {
 		// else set the url
-		capsName := strings.Title(sender)
-		ok := rds.RedisSet(rds.RC, capsName, url)
+		lowName := strings.ToLower(sender)
+		ok := rds.RedisSet(rds.RC, lowName, url)
 		if !ok {
 			tools.WriteLog("Error: myTeamRouteSS() redisSet() Fail")
 			messageSend(s, "Something went wrong, alert the Master Llama!")
 		} else {
-			messageSend(s, "Team set!")
+			messageSend(s, "Note set!")
 		}
 
 	}
@@ -100,11 +100,11 @@ func myTeamRouteSS(s *dg.Session, sender string, url string) {
 
 func getTeamRouteSS(s *dg.Session, user string) {
 	// redis get persons team image
-	capName := strings.Title(user)
-	link, err := rds.RedisGet(rds.RC, capName)
+	lowName := strings.ToLower(user)
+	link, err := rds.RedisGet(rds.RC, lowName)
 	if err != nil {
 		tools.WriteErr(err)
-		messageSend(s, "That person has no team set!")
+		messageSend(s, "That person has no note set!")
 	} else {
 		messageSend(s, link)
 	}
@@ -119,7 +119,7 @@ func highestEvoSS(playerName string) string {
 	// HGETALL to see if entry exists, if not decrement, repeat
 	finalForm := playerName + "_3"
 	for i := 3; i > 0; i-- {
-		lookupKey := strings.Title(fmt.Sprintf("%s_%d", playerName, i))
+		lookupKey := strings.ToLower(fmt.Sprintf("%s_%d", playerName, i))
 		exists, err := rds.RC.Exists(lookupKey).Result()
 		if err != nil {
 			tools.WriteErr(err)
