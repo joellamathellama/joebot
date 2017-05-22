@@ -1,0 +1,12 @@
+[{"Officer Name":"Sima Yi","Passive Name":"Glaciate","Passive Level":"1","Skill Description":"Decrease Skill CD time by 20%, when chain reaches 100 or more"},
+{"Officer Name":"Sima Yi","Passive Name":"Dominate","Passive Level":"4","Skill Description":"When your HP is under 50%, Shield Dmg will increase by 45%"},
+{"Officer Name":"Sima Yi","Passive Name":"Plated","Passive Level":"2","Skill Description":"Increase Def by 25% for 20 seconds, when receiving 5% or more DMG"},
+{"Officer Name":"Sima Yi","Passive Name":"Sub-Zero","Passive Level":"2","Skill Description":"For every successful hit, 30% of chances to Freeze your enemy for 2 seconds"},
+{"Officer Name":"Sima Yi","Passive Name":"Fury ","Passive Level":"1","Skill Description":"When killing soldiers, increase ATK spd by 5% for 5 seconds"},
+{"Officer Name":"Sima Yi","Passive Name":"Guerrilla","Passive Level":"3","Skill Description":"Increase Crit Chance by 20%, when HP is under 50%"},
+{"Officer Name":"Wang Yuanji","Passive Name":"Crush","Passive Level":"3","Skill Description":"When killing soldiers, increase SHIELD DMG by 50% for 10 seconds"},
+{"Officer Name":"Wang Yuanji","Passive Name":"Recover","Passive Level":"4","Skill Description":"Decrease Skill CD time by 35%, when HP is below 35%"},
+{"Officer Name":"Wang Yuanji","Passive Name":"Invade ","Passive Level":"2","Skill Description":"Increase CRIT CHANCE by 15%, when 2 or more skills are on CD"},
+{"Officer Name":"Wang Yuanji","Passive Name":"Dominate","Passive Level":"2","Skill Description":"When your HP is under 50%, SHIELD DMG will increase by 35%"},
+{"Officer Name":"Wang Yuanji","Passive Name":"Bloodshed ","Passive Level":"1","Skill Description":"Increase CRIT CHANCE by 1% for every 50 CHAIN reached, can be stacked up to 5 times"},
+{"Officer Name":"Wang Yuanji","Passive Name":"Berserk","Passive Level":"1","Skill Description":"Increase ATK SPD by 15% for 20 seconds, when receiving 5% or more DMG"}]

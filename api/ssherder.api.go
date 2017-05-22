@@ -135,12 +135,12 @@ func GetPlayers() {
 			skillCD := skillHash["Cooldown"]
 
 			// How I want one line printed
-			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, strings.Title(skillCat), skillDesc)
+			skillInfo := fmt.Sprintf("**%s** [%s] \n%s\n\n", skillName, strings.ToLower(skillCat), skillDesc)
 
 			if skillCat == "ace" {
 				ace = skillInfo
 			} else if skillCat == "active" { // active skills have a unique print
-				active = fmt.Sprintf("**%s** [%s, %s spirit, %sm] \n%s\n\n", skillName, strings.Title(skillCat), skillCost, skillCD, skillDesc)
+				active = fmt.Sprintf("**%s** [%s, %s spirit, %sm] \n%s\n\n", skillName, strings.ToLower(skillCat), skillCost, skillCD, skillDesc)
 			} else { // Multiple passives per player
 				passives = passives + skillInfo
 			}
@@ -166,11 +166,11 @@ func GetPlayers() {
 		rds.RedisSet(rds.RC, playerMap["ID"], playerName)
 
 		// set full name, then loop over(if two or more) splitName
-		rds.RC.HMSet(strings.Title(lookupKey), playerMap)
+		rds.RC.HMSet(strings.ToLower(lookupKey), playerMap)
 		if len(splitName) > 1 {
 			for x := 0; x < len(splitName); x++ {
 				// check if it exists already
-				splitKey := fmt.Sprintf("%s_%s", strings.Title(splitName[x]), keyID)
+				splitKey := fmt.Sprintf("%s_%s", strings.ToLower(splitName[x]), keyID)
 				exists, err := rds.RC.Exists(splitKey).Result()
 				if err != nil {
 					tools.WriteErr(err)
@@ -334,7 +334,7 @@ func GetStones() {
 		// Key example: stone_stone name, stone_stone, and stone_name
 		// split the name if it contains any spaces
 		if len(stoneName) != 0 {
-			// stoneKey := fmt.Sprintf("stone_%s", strings.Title(stoneName))
+			// stoneKey := fmt.Sprintf("stone_%s", strings.ToLower(stoneName))
 			stoneKey := fmt.Sprintf("stone_%s", stoneName)
 			splitName := strings.Split(stoneName, " ")
 			ok := rds.RedisSet(rds.RC, stoneKey, skillDesc)
@@ -344,7 +344,7 @@ func GetStones() {
 			if len(splitName) > 1 {
 				for k := 0; k < len(splitName); k++ {
 					splitKey := fmt.Sprintf("stone_%s", splitName[k])
-					ok = rds.RedisSet(rds.RC, splitKey, strings.Title(skillDesc))
+					ok = rds.RedisSet(rds.RC, splitKey, strings.ToLower(skillDesc))
 					if !ok {
 						tools.WriteLog("Error: getStones() redisSet failed!")
 					}
