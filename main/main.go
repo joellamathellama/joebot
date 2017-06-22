@@ -30,7 +30,7 @@ func init() {
 	fmt.Println("Init Redis. Expect no panic")
 	rds.RedisInit()
 	// Flush Redis
-	fmt.Println("Flushing ALL Keys in ALL Databases")
+	fmt.Println("Flushing Redis")
 	rds.RC.FlushAll()
 	// Test redis Set & Get
 	fmt.Println("Redis Set & Get test. Expect no panic")
@@ -52,8 +52,10 @@ func init() {
 	// Called once on init and stored into Redis
 	ssherderApis()
 
-	// DWU JSON to Redis
+	// JSON to Redis
 	dwuToRedis()
+	api.LocalizationToRedis()
+	api.PilotsToRedis()
 
 	// Create map of quick responses
 	routes.BotResInit()
@@ -84,7 +86,7 @@ func whenReady(s *dg.Session, event *dg.Ready) {
 	// Set the playing status.
 	t.WriteLog("whenReady()")
 
-	bStatus := "~jb help"
+	bStatus := "~help"
 	if err = s.UpdateStatus(0, bStatus); err != nil {
 		t.WriteErr(err)
 		fmt.Println(err)

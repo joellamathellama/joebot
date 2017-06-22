@@ -334,8 +334,7 @@ func GetStones() {
 		// Key example: stone_stone name, stone_stone, and stone_name
 		// split the name if it contains any spaces
 		if len(stoneName) != 0 {
-			// stoneKey := fmt.Sprintf("stone_%s", strings.ToLower(stoneName))
-			stoneKey := fmt.Sprintf("stone_%s", stoneName)
+			stoneKey := fmt.Sprintf("stone_%s", strings.ToLower(stoneName))
 			splitName := strings.Split(stoneName, " ")
 			ok := rds.RedisSet(rds.RC, stoneKey, skillDesc)
 			if !ok {
@@ -343,7 +342,7 @@ func GetStones() {
 			}
 			if len(splitName) > 1 {
 				for k := 0; k < len(splitName); k++ {
-					splitKey := fmt.Sprintf("stone_%s", splitName[k])
+					splitKey := fmt.Sprintf("stone_%s", strings.ToLower(splitName[k]))
 					ok = rds.RedisSet(rds.RC, splitKey, strings.ToLower(skillDesc))
 					if !ok {
 						tools.WriteLog("Error: getStones() redisSet failed!")
