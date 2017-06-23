@@ -5,6 +5,7 @@ import (
 	"fmt"
 	dg "github.com/bwmarrin/discordgo"
 	"joebot/api"
+	"joebot/general"
 	"joebot/rds"
 	"joebot/routes"
 	t "joebot/tools"
@@ -30,8 +31,8 @@ func init() {
 	fmt.Println("Init Redis. Expect no panic")
 	rds.RedisInit()
 	// Flush Redis
-	fmt.Println("Flushing Redis")
-	rds.RC.FlushAll()
+	// fmt.Println("Flushing Redis")
+	// rds.RC.FlushAll()
 	// Test redis Set & Get
 	fmt.Println("Redis Set & Get test. Expect no panic")
 	ok := rds.RedisSet(rds.RC, "redis_test_key", "redis_test_value")
@@ -59,6 +60,9 @@ func init() {
 
 	// Create map of quick responses
 	routes.BotResInit()
+
+	// Create lists
+	routes.CreateAlarmList()
 }
 
 /* api calls */
@@ -94,6 +98,8 @@ func whenReady(s *dg.Session, event *dg.Ready) {
 		bS := fmt.Sprintf("Update Status: %s", bStatus)
 		t.WriteLog(bS)
 	}
+
+	general.AlarmGKShootout(s)
 }
 
 func main() {

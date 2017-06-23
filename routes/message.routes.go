@@ -13,13 +13,12 @@ import (
 	cmdResList = map of commands and the corresponding responses
 */
 var (
-	cID        string
 	cmdResList map[string]string
 	BotID      string
 	err        error
 )
 
-func messageSend(s *dg.Session, m string) {
+func SendMessage(s *dg.Session, cID string, m string) {
 	// fmt.Printf("@@@: %s, %s", cID, m)
 	if _, err = s.ChannelMessageSend(cID, m); err != nil {
 		tools.WriteErr(err)
@@ -38,7 +37,22 @@ func BotResInit() {
 	cmdResList["redditdwu"] = "http://reddit.com/r/dwunleashed"
 	cmdResList["teamwork"] = "https://docs.google.com/spreadsheets/d/1x0Q4vUk_V3wUwzM5XR_66xytSbapoSFm_cHR9PYIERs/htmlview?sle=true#"
 	cmdResList["chains"] = "https://ssherder.com/characters/#"
-	cmdResList["help"] = "Shoutout to ssherder.com, api.lootbox.eu/documentation#/ and gkgirls.info.gf/.\n\n*General Commands:*\n**Write my own Note:** '~mynote <Text>'\n**Read others Note:** '~note <Discord Name>'\n\n*Overwatch Commands:(Lootbox seems to be down for now)*\n**Lookup PC Profile:** '~PCprofile <Bnet Tag>'\n**Lookup PC Stats:** '~PCstats <Bnet Tag>'\n**Lookup PS:** Same thing, except '~PSprofile, ~PSstats'\n**Lookup Xbox:** Same thing, except '~Xprofile, ~Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** '~sstory, ~sstone, ~sslots, ~ssherder or ~sskills <Name>'\n**Quick links:** '~ourteams', '~apoc', '~reddit'\n\n*Dynasty Warriors Unleashed Commands:*\n**Lookup Officer Legendary Passives:** '~dwup <Name>'\n**Lookup Officer Stats:** '~dwus <Name>'\n\n*Goddess Kiss Commands:*\n**Lookup Pilot Skills:** '~gskills <Name>'\n\n*Everything is case *insensitive!*(Except Bnet Tags)"
+	cmdResList["help"] = "Shoutout to ssherder.com, api.lootbox.eu/documentation#/ and gkgirls.info.gf/\n\n" +
+		"*General Commands:*\n**Write my own Note:** '~mynote <Text>'\n" +
+		"**Read others Note:** '~note <Discord Name>'\n" +
+		"**Alarms:** '~alarm <Name>'\n\n" +
+		"*Overwatch Commands:(Lootbox seems to be down for now)*\n" +
+		"**Lookup PC Profile:** '~PCprofile <Bnet Tag>'\n" +
+		"**Lookup PC Stats:** '~PCstats <Bnet Tag>'\n" +
+		"**Lookup PS:** Same thing, except '~PSprofile, ~PSstats'\n" +
+		"**Lookup Xbox:** Same thing, except '~Xprofile, ~Xstats'\n\n" +
+		"*Soccer Spirits Commands:*\n**Lookup player info:** '~sstory, ~sstone, ~sslots, ~ssherder or ~sskills <Name>'\n" +
+		"**Quick links:** '~ourteams', '~apoc', '~reddit'\n\n" +
+		"*Dynasty Warriors Unleashed Commands:*\n" +
+		"**Lookup Officer Legendary Passives:** '~dwup <Name>'\n" +
+		"**Lookup Officer Stats:** '~dwus <Name>'\n\n" +
+		"*Goddess Kiss Commands:*\n**Lookup Pilot Skills:** '~gskills <Name>'\n\n" +
+		"*Everything is case *insensitive!*(Except Bnet Tags)"
 }
 
 // This function will be called (due to AddHandler) every time a new
@@ -48,12 +62,12 @@ func MessageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	c := m.Content // full message sent by user
 
 	// Meta
-	cID = m.ChannelID
+	cID := m.ChannelID
 	sender := m.Author.Username
 	// Ignore all messages created by the bot itself and anything short of "~"
 	if m.Author.ID == BotID {
 		return
-	} else if c[0:1] != "~" || len(c) < 2 {
+	} else if len(c) < 2 || c[0:1] != "~" {
 		return
 	}
 
@@ -64,7 +78,7 @@ func MessageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	cmdArgs := ""
 
 	if len(cmdResList[cc]) != 0 { // if quick command
-		messageSend(s, cmdResList[cc])
+		SendMessage(s, cID, cmdResList[cc])
 		return
 	} else if len(cSplit) >= 2 {
 		cmdArgs = c[cl:]
@@ -84,7 +98,11 @@ func MessageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		}
 	case "note":
 		res = getTeamRouteSS(s, cmdArgs)
-		/* Soccer Spirits */
+	case "setalarm":
+		res = setAlarm(s, cID, cmdArgs)
+	case "removealarm":
+		res = removeAlarm(s, cID, cmdArgs)
+	/* Soccer Spirits */
 	case "sstory":
 		res = storyRouteSS(s, cmdArgs)
 	case "sslots":
@@ -97,35 +115,29 @@ func MessageRoutes(s *dg.Session, m *dg.MessageCreate) {
 		res = stoneRouteSS(s, cmdArgs)
 		/* Overwatch */
 	case "pcprofile":
-		profileRouteOW(s, cmdArgs, "pc")
-		return
+		res = profileRouteOW(s, cmdArgs, "pc")
 	case "pcstats":
-		statsRouteOW(s, cmdArgs, "pc")
-		return
+		res = statsRouteOW(s, cmdArgs, "pc")
 	case "psprofile":
-		profileRouteOW(s, cmdArgs, "psn")
-		return
+		res = profileRouteOW(s, cmdArgs, "psn")
 	case "psstats":
-		statsRouteOW(s, cmdArgs, "psn")
-		return
+		res = statsRouteOW(s, cmdArgs, "psn")
 	case "xprofile":
-		profileRouteOW(s, cmdArgs, "xbl")
-		return
+		res = profileRouteOW(s, cmdArgs, "xbl")
 	case "xstats":
-		statsRouteOW(s, cmdArgs, "xbl")
-		return
+		res = statsRouteOW(s, cmdArgs, "xbl")
 		/* Dynasty Warriors Unleashed */
 	case "dwup":
 		res = passiveRouteDWU(s, cmdArgs)
 	case "dwus":
 		res = officerRouteDWU(s, cmdArgs)
-		/* Dynasty Warriors Unleashed */
+		/* Goddess Kiss */
 	case "gskills":
 		res = skillsRouteGK(s, cmdArgs)
 	default:
 		res = "Enter a valid command"
 	}
 
-	messageSend(s, res)
+	SendMessage(s, cID, res)
 	return
 }

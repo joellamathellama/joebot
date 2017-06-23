@@ -48,3 +48,29 @@ func RedisGet(c *redis.Client, key string) (val string, err error) {
 	}
 	return
 }
+
+func RedisLPush(c *redis.Client, key string, value string) bool {
+	err := c.LPush(key, value).Err()
+	if err != nil {
+		tools.WriteErr(err)
+		return false
+	}
+	return true
+}
+
+func RedisLRem(c *redis.Client, key string, value string) bool {
+	err := c.LRem(key, 0, value).Err()
+	if err != nil {
+		tools.WriteErr(err)
+		return false
+	}
+	return true
+}
+
+func RedisLRange(c *redis.Client, key string) (val []string) {
+	val, err := c.LRange(key, 0, -1).Result()
+	if err != nil {
+		tools.WriteErr(err)
+	}
+	return
+}
