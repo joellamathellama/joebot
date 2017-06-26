@@ -40,7 +40,8 @@ func BotResInit() {
 	cmdResList["help"] = "Shoutout to ssherder.com, api.lootbox.eu/documentation#/ and gkgirls.info.gf/\n\n" +
 		"*General Commands:*\n**Write my own Note:** '~mynote <Text>'\n" +
 		"**Read others Note:** '~note <Discord Name>'\n" +
-		"**Alarms:** '~alarm <Name>'\n\n" +
+		"**Set Alarm in this channel:** '~setalarm <Name>'\n" +
+		"**Remove Alarm in this channel:** '~removealarm <Name>'\n\n" +
 		"*Overwatch Commands:(Lootbox seems to be down for now)*\n" +
 		"**Lookup PC Profile:** '~PCprofile <Bnet Tag>'\n" +
 		"**Lookup PC Stats:** '~PCstats <Bnet Tag>'\n" +
@@ -48,7 +49,7 @@ func BotResInit() {
 		"**Lookup Xbox:** Same thing, except '~Xprofile, ~Xstats'\n\n" +
 		"*Soccer Spirits Commands:*\n**Lookup player info:** '~sstory, ~sstone, ~sslots, ~ssherder or ~sskills <Name>'\n" +
 		"**Quick links:** '~ourteams', '~apoc', '~reddit'\n\n" +
-		"*Dynasty Warriors Unleashed Commands:*\n" +
+		"*Dynasty Warriors Unleashed Commands:(Deprecated)*\n" +
 		"**Lookup Officer Legendary Passives:** '~dwup <Name>'\n" +
 		"**Lookup Officer Stats:** '~dwus <Name>'\n\n" +
 		"*Goddess Kiss Commands:*\n**Lookup Pilot Skills:** '~gskills <Name>'\n\n" +
@@ -92,48 +93,48 @@ func MessageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	/* General */
 	case "mynote":
 		if len(cmdArgs) > 0 {
-			res = myTeamRouteSS(s, sender, cmdArgs)
+			res = myNotes(sender, cmdArgs)
 		} else {
-			res = myTeamRouteSS(s, sender, "GET")
+			res = myNotes(sender, "GET")
 		}
 	case "note":
-		res = getTeamRouteSS(s, cmdArgs)
+		res = getNotes(cmdArgs)
 	case "setalarm":
-		res = setAlarm(s, cID, cmdArgs)
+		res = setAlarm(cID, cmdArgs)
 	case "removealarm":
-		res = removeAlarm(s, cID, cmdArgs)
+		res = removeAlarm(cID, cmdArgs)
 	/* Soccer Spirits */
 	case "sstory":
-		res = storyRouteSS(s, cmdArgs)
+		res = storyRouteSS(cmdArgs)
 	case "sslots":
-		res = slotesRouteSS(s, cmdArgs)
+		res = slotesRouteSS(cmdArgs)
 	case "ssherder":
-		res = ssherderRouteSS(s, cmdArgs)
+		res = ssherderRouteSS(cmdArgs)
 	case "sskills":
-		res = skillsRouteSS(s, cmdArgs)
+		res = skillsRouteSS(cmdArgs)
 	case "sstone":
-		res = stoneRouteSS(s, cmdArgs)
+		res = stoneRouteSS(cmdArgs)
 		/* Overwatch */
 	case "pcprofile":
-		res = profileRouteOW(s, cmdArgs, "pc")
+		res = profileRouteOW(cmdArgs, "pc")
 	case "pcstats":
-		res = statsRouteOW(s, cmdArgs, "pc")
+		res = statsRouteOW(cmdArgs, "pc")
 	case "psprofile":
-		res = profileRouteOW(s, cmdArgs, "psn")
+		res = profileRouteOW(cmdArgs, "psn")
 	case "psstats":
-		res = statsRouteOW(s, cmdArgs, "psn")
+		res = statsRouteOW(cmdArgs, "psn")
 	case "xprofile":
-		res = profileRouteOW(s, cmdArgs, "xbl")
+		res = profileRouteOW(cmdArgs, "xbl")
 	case "xstats":
-		res = statsRouteOW(s, cmdArgs, "xbl")
+		res = statsRouteOW(cmdArgs, "xbl")
 		/* Dynasty Warriors Unleashed */
 	case "dwup":
-		res = passiveRouteDWU(s, cmdArgs)
+		res = passiveRouteDWU(cmdArgs)
 	case "dwus":
-		res = officerRouteDWU(s, cmdArgs)
+		res = officerRouteDWU(cmdArgs)
 		/* Goddess Kiss */
 	case "gskills":
-		res = skillsRouteGK(s, cmdArgs)
+		res = skillsRouteGK(cmdArgs)
 	default:
 		res = "Enter a valid command"
 	}

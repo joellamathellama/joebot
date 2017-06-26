@@ -57,6 +57,8 @@ func init() {
 	dwuToRedis()
 	api.LocalizationToRedis()
 	api.PilotsToRedis()
+	api.Test1()
+	api.Test2()
 
 	// Create map of quick responses
 	routes.BotResInit()

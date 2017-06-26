@@ -1,7 +1,6 @@
 package routes
 
 import (
-	dg "github.com/bwmarrin/discordgo"
 	"joebot/rds"
 	"joebot/tools"
 )
@@ -14,7 +13,7 @@ func CreateAlarmList() {
 	alarmList = append(alarmList, "gkshootout")
 }
 
-func setAlarm(s *dg.Session, cID string, name string) (res string) {
+func setAlarm(cID string, name string) (res string) {
 	res = "Alarm set to this channel"
 	if tools.StringInSlice(name, alarmList) {
 		rds.RedisLRem(rds.RC, name, cID)
@@ -25,7 +24,7 @@ func setAlarm(s *dg.Session, cID string, name string) (res string) {
 	return
 }
 
-func removeAlarm(s *dg.Session, cID string, name string) (res string) {
+func removeAlarm(cID string, name string) (res string) {
 	res = "Alarm removed from this channel"
 	if tools.StringInSlice(name, alarmList) {
 		rds.RedisLRem(rds.RC, name, cID)

@@ -2,13 +2,12 @@ package routes
 
 import (
 	"fmt"
-	dg "github.com/bwmarrin/discordgo"
 	"joebot/rds"
 	"joebot/tools"
 	"strings"
 )
 
-func skillsRouteGK(s *dg.Session, pilotName string) (res string) {
+func skillsRouteGK(pilotName string) (res string) {
 	// rds.RedisGet(key)
 	// if else error
 	pilotLow := strings.ToLower(pilotName)

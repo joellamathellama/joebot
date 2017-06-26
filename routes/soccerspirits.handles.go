@@ -2,13 +2,12 @@ package routes
 
 import (
 	"fmt"
-	dg "github.com/bwmarrin/discordgo"
 	"joebot/rds"
 	"joebot/tools"
 	"strings"
 )
 
-func storyRouteSS(s *dg.Session, playerName string) (res string) {
+func storyRouteSS(playerName string) (res string) {
 	lookupKey := highestEvoSS(playerName)
 	// fmt.Println(lookupKey)
 	res, err := rds.RC.HGet(lookupKey, "Story").Result()
@@ -19,7 +18,7 @@ func storyRouteSS(s *dg.Session, playerName string) (res string) {
 	return
 }
 
-func slotesRouteSS(s *dg.Session, playerName string) (res string) {
+func slotesRouteSS(playerName string) (res string) {
 	lookupKey := highestEvoSS(playerName)
 	// fmt.Println(lookupKey)
 	res, err := rds.RC.HGet(lookupKey, "Stones").Result()
@@ -30,7 +29,7 @@ func slotesRouteSS(s *dg.Session, playerName string) (res string) {
 	return
 }
 
-func ssherderRouteSS(s *dg.Session, playerName string) (res string) {
+func ssherderRouteSS(playerName string) (res string) {
 	// https://ssherder.com/characters/ID/
 	// lookup player ID, add to URL, send message
 	lookupKey := highestEvoSS(playerName)
@@ -45,7 +44,7 @@ func ssherderRouteSS(s *dg.Session, playerName string) (res string) {
 	return
 }
 
-func skillsRouteSS(s *dg.Session, playerName string) (res string) {
+func skillsRouteSS(playerName string) (res string) {
 	// https://ssherder.com/characters/ID/
 	// lookup player ID, add to URL, send message
 	lookupKey := highestEvoSS(playerName)
@@ -58,7 +57,7 @@ func skillsRouteSS(s *dg.Session, playerName string) (res string) {
 	return
 }
 
-func stoneRouteSS(s *dg.Session, stoneName string) (res string) {
+func stoneRouteSS(stoneName string) (res string) {
 	// rds.RedisGet(key)
 	// if else error
 	stoneTitle := strings.ToLower(stoneName)
@@ -67,42 +66,6 @@ func stoneRouteSS(s *dg.Session, stoneName string) (res string) {
 	if err != nil {
 		tools.WriteErr(err)
 		res = "Error retrieving Spirit Stone data!"
-	}
-	return
-}
-
-func myTeamRouteSS(s *dg.Session, sender string, url string) (res string) {
-	lowName := strings.ToLower(sender)
-	res = ""
-	if url == "GET" {
-		// redis get persons team image
-		link, err := rds.RedisGet(rds.RC, lowName)
-		if err != nil {
-			tools.WriteErr(err)
-			res = "No note has been set!"
-		} else {
-			res = link
-		}
-	} else {
-		// else set the url
-		ok := rds.RedisSet(rds.RC, lowName, url)
-		if !ok {
-			tools.WriteLog("Error: myTeamRouteSS() redisSet() Fail")
-			res = "Something went wrong, alert the Master Llama!"
-		} else {
-			res = "Note set!"
-		}
-	}
-	return
-}
-
-func getTeamRouteSS(s *dg.Session, user string) (res string) {
-	// redis get persons team image
-	lowName := strings.ToLower(user)
-	res, err := rds.RedisGet(rds.RC, lowName)
-	if err != nil {
-		tools.WriteErr(err)
-		res = "That person has no note set!"
 	}
 	return
 }
