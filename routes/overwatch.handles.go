@@ -2,14 +2,13 @@ package routes
 
 import (
 	"fmt"
-	dg "github.com/bwmarrin/discordgo"
 	"joebot/api"
 	"joebot/rds"
 	"joebot/tools"
 	"strings"
 )
 
-func profileRouteOW(s *dg.Session, playerName string, platform string) {
+func profileRouteOW(playerName string, platform string) (res string) {
 	// replace # with - and call getPlayerStats
 	fmtName := strings.Replace(playerName, "#", "-", -1)
 
@@ -19,18 +18,15 @@ func profileRouteOW(s *dg.Session, playerName string, platform string) {
 	if err != nil {
 		tools.WriteErr(err)
 	} else {
-		messageSend(s, res)
 		return
 	}
 
-	messageSend(s, "This may take a few seconds...")
-
 	playerProfile := api.GetPlayerProfile(fmtName, platform)
-
-	messageSend(s, playerProfile)
+	res = playerProfile
+	return
 }
 
-func statsRouteOW(s *dg.Session, playerName string, platform string) {
+func statsRouteOW(playerName string, platform string) (res string) {
 	fmtName := strings.Replace(playerName, "#", "-", -1)
 
 	// Look it up in redis, if exit, return info, if not, continue
@@ -39,13 +35,10 @@ func statsRouteOW(s *dg.Session, playerName string, platform string) {
 	if err != nil {
 		tools.WriteErr(err)
 	} else {
-		messageSend(s, res)
 		return
 	}
 
-	messageSend(s, "This may take few seconds...")
-
 	playerStats := api.GetPlayerStats(fmtName, platform)
-
-	messageSend(s, playerStats)
+	res = playerStats
+	return
 }

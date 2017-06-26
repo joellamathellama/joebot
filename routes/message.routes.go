@@ -13,13 +13,12 @@ import (
 	cmdResList = map of commands and the corresponding responses
 */
 var (
-	cID        string
 	cmdResList map[string]string
 	BotID      string
 	err        error
 )
 
-func messageSend(s *dg.Session, m string) {
+func SendMessage(s *dg.Session, cID string, m string) {
 	// fmt.Printf("@@@: %s, %s", cID, m)
 	if _, err = s.ChannelMessageSend(cID, m); err != nil {
 		tools.WriteErr(err)
@@ -38,7 +37,23 @@ func BotResInit() {
 	cmdResList["redditdwu"] = "http://reddit.com/r/dwunleashed"
 	cmdResList["teamwork"] = "https://docs.google.com/spreadsheets/d/1x0Q4vUk_V3wUwzM5XR_66xytSbapoSFm_cHR9PYIERs/htmlview?sle=true#"
 	cmdResList["chains"] = "https://ssherder.com/characters/#"
-	cmdResList["help"] = "Shoutout to ssherder.com and api.lootbox.eu/documentation#/ for their APIs.\n\nTo talk to the bot, preface your message with '~jb'\n\n*General Commands:*\n**Write my own Note:** 'mynote <Your note here.>' (Ex. ~jb note sharr/elaine/renee...)\n**Read others Note:** 'note <Discord Name>' (Ex. ~jb note joellama)\n\n*Overwatch Commands:*\n**Lookup PC Profile:** 'PCprofile <Battlenet Tag>' (Ex. ~jb pcprofile joellama#1114)\n**Lookup PC Stats:** 'PCstats <Battlenet Tag>' (Ex. ~jb pcstats joellama#1114)\n**Lookup PS:** Same thing, except 'PSprofile, PSstats'\n**Lookup Xbox:** Same thing, except 'Xprofile, Xstats'\n\n*Soccer Spirits Commands:*\n**Lookup player info:** 'sstory, sstone, sslots, ssherder or sskills <Player Name>' (Ex. ~jb stats Griffith)\n**Quick links:** 'ourteams', 'apoc', 'reddit' (Ex. ~jb apoc)\n\n*Dynasty Warriors Unleashed Commands:*\n**Lookup Officer Legendary Passives:** 'dwup <Officer Name>' (Ex. ~jb dwup cai wenji)\n**Lookup Officer Stats:** 'dwus <Officer Name>' (Ex. ~jb dwus cai wenji)\n\n*Everything is case *insensitive!*(Except Bnet Tags)"
+	cmdResList["help"] = "Shoutout to ssherder.com, api.lootbox.eu/documentation#/ and gkgirls.info.gf/\n\n" +
+		"*General Commands:*\n**Write my own Note:** '~mynote <Text>'\n" +
+		"**Read others Note:** '~note <Discord Name>'\n" +
+		"**Set Alarm in this channel:** '~setalarm <Name>'\n" +
+		"**Remove Alarm in this channel:** '~removealarm <Name>'\n\n" +
+		"*Overwatch Commands:(Lootbox seems to be down for now)*\n" +
+		"**Lookup PC Profile:** '~PCprofile <Bnet Tag>'\n" +
+		"**Lookup PC Stats:** '~PCstats <Bnet Tag>'\n" +
+		"**Lookup PS:** Same thing, except '~PSprofile, ~PSstats'\n" +
+		"**Lookup Xbox:** Same thing, except '~Xprofile, ~Xstats'\n\n" +
+		"*Soccer Spirits Commands:*\n**Lookup player info:** '~sstory, ~sstone, ~sslots, ~ssherder or ~sskills <Name>'\n" +
+		"**Quick links:** '~ourteams', '~apoc', '~reddit'\n\n" +
+		"*Dynasty Warriors Unleashed Commands:(Deprecated)*\n" +
+		"**Lookup Officer Legendary Passives:** '~dwup <Name>'\n" +
+		"**Lookup Officer Stats:** '~dwus <Name>'\n\n" +
+		"*Goddess Kiss Commands:*\n**Lookup Pilot Skills:** '~gskills <Name>'\n\n" +
+		"*Everything is case *insensitive!*(Except Bnet Tags)"
 }
 
 // This function will be called (due to AddHandler) every time a new
@@ -46,72 +61,84 @@ func BotResInit() {
 func MessageRoutes(s *dg.Session, m *dg.MessageCreate) {
 	// Contents
 	c := m.Content // full message sent by user
-	nn := 3        //  bot command length(~jb)
-	// Ignore all messages created by the bot itself and anything short of "~jb "
+
+	// Meta
+	cID := m.ChannelID
+	sender := m.Author.Username
+	// Ignore all messages created by the bot itself and anything short of "~"
 	if m.Author.ID == BotID {
 		return
-	} else if len(c) <= nn || tools.RegexpMatch("^(?i)(~JB)", c[0:nn]) != true {
-		// fmt.Println("Not talking to bot")
+	} else if len(c) < 2 || c[0:1] != "~" {
 		return
 	}
 
 	// split message by command and arguments
-	cSplit := strings.Split(c, " ") // ["~jb", "command", [...]]
-	cc := cSplit[1]
-	cl := len(cc) + nn
-	if len(cSplit) > 2 { // extract argument
-		cl = cl + 2
-	} else {
-		cl = cl + 1
-	}
-	cmdArgs := c[cl:]
-
-	// Meta
-	cID = m.ChannelID
-	sender := m.Author.Username
+	cSplit := strings.Split(c[1:], " ") // ["command", ..., ...]
+	cc := cSplit[0]                     // "command"
+	cl := len(cc) + 2
+	cmdArgs := ""
 
 	if len(cmdResList[cc]) != 0 { // if quick command
-		messageSend(s, cmdResList[cc])
+		SendMessage(s, cID, cmdResList[cc])
+		return
+	} else if len(cSplit) >= 2 {
+		cmdArgs = c[cl:]
 	}
+
 	/*
 		ROUTES
 	*/
+	res := ""
 	switch ccLow := strings.ToLower(cc); ccLow {
-	case "sstory":
-		storyRouteSS(s, cmdArgs)
-	case "sslots":
-		slotesRouteSS(s, cmdArgs)
-	case "ssherder":
-		ssherderRouteSS(s, cmdArgs)
-	case "sskills":
-		skillsRouteSS(s, cmdArgs)
-	case "sstone":
-		stoneRouteSS(s, cmdArgs)
+	/* General */
 	case "mynote":
 		if len(cmdArgs) > 0 {
-			myTeamRouteSS(s, sender, cmdArgs)
+			res = myNotes(sender, cmdArgs)
 		} else {
-			myTeamRouteSS(s, sender, "GET")
+			res = myNotes(sender, "GET")
 		}
 	case "note":
-		getTeamRouteSS(s, cmdArgs)
+		res = getNotes(cmdArgs)
+	case "setalarm":
+		res = setAlarm(cID, cmdArgs)
+	case "removealarm":
+		res = removeAlarm(cID, cmdArgs)
+	/* Soccer Spirits */
+	case "sstory":
+		res = storyRouteSS(cmdArgs)
+	case "sslots":
+		res = slotesRouteSS(cmdArgs)
+	case "ssherder":
+		res = ssherderRouteSS(cmdArgs)
+	case "sskills":
+		res = skillsRouteSS(cmdArgs)
+	case "sstone":
+		res = stoneRouteSS(cmdArgs)
+		/* Overwatch */
 	case "pcprofile":
-		profileRouteOW(s, cmdArgs, "pc")
+		res = profileRouteOW(cmdArgs, "pc")
 	case "pcstats":
-		statsRouteOW(s, cmdArgs, "pc")
+		res = statsRouteOW(cmdArgs, "pc")
 	case "psprofile":
-		profileRouteOW(s, cmdArgs, "psn")
+		res = profileRouteOW(cmdArgs, "psn")
 	case "psstats":
-		statsRouteOW(s, cmdArgs, "psn")
+		res = statsRouteOW(cmdArgs, "psn")
 	case "xprofile":
-		profileRouteOW(s, cmdArgs, "xbl")
+		res = profileRouteOW(cmdArgs, "xbl")
 	case "xstats":
-		statsRouteOW(s, cmdArgs, "xbl")
+		res = statsRouteOW(cmdArgs, "xbl")
+		/* Dynasty Warriors Unleashed */
 	case "dwup":
-		passiveRouteDWU(s, cmdArgs)
+		res = passiveRouteDWU(cmdArgs)
 	case "dwus":
-		officerRouteDWU(s, cmdArgs)
+		res = officerRouteDWU(cmdArgs)
+		/* Goddess Kiss */
+	case "gskills":
+		res = skillsRouteGK(cmdArgs)
 	default:
-		// messageSend(s, "Enter a valid command")
+		res = "Enter a valid command"
 	}
+
+	SendMessage(s, cID, res)
+	return
 }
