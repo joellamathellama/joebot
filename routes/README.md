@@ -3,5 +3,5 @@
 ### message.routes.go
 	- List of all available commands and which handler it triggers
 
-### {Title}.handles.go
-	- Handlers that store or get data
+### {title}.handles.go
+	- Handlers that store or get data from Redis
