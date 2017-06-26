@@ -101,6 +101,7 @@ func whenReady(s *dg.Session, event *dg.Ready) {
 		t.WriteLog(bS)
 	}
 
+	// Start Tickers
 	alarms.AlarmGKShootout(s)
 }
 
