@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	dg "github.com/bwmarrin/discordgo"
+	"joebot/alarms"
 	"joebot/api"
-	"joebot/general"
 	"joebot/rds"
 	"joebot/routes"
 	t "joebot/tools"
@@ -101,7 +101,7 @@ func whenReady(s *dg.Session, event *dg.Ready) {
 		t.WriteLog(bS)
 	}
 
-	general.AlarmGKShootout(s)
+	alarms.AlarmGKShootout(s)
 }
 
 func main() {
