@@ -217,4 +217,5 @@ func Test2() {
 		t.WriteLog("Successful: Regulation/SkillUpgradeDataTable.json Unmarshal to ExpectedGKSkillUpgrade")
 	}
 
+	// return eSU
 }
