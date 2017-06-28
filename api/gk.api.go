@@ -158,6 +158,13 @@ func PilotsToRedis() {
 			// each pilot has 4 skills(append redis key with 1-4 accordingly)
 			for k := 1; k <= 4; k++ {
 				sName, _ := rds.RedisGet(rds.RC, fmt.Sprintf("gk_en_10%s%d", eP[i].UnitID, k))
+				/*
+					- search sName in SkillDataTable. Get key id.
+					- search key id in SkillUpgradeDataTable
+					- if not exist, set bonus damage to 0
+					- else loop through all values
+					- set bonus damage to first value != "0"
+				*/
 				sDesc, _ := rds.RedisGet(rds.RC, fmt.Sprintf("gk_en_20%s%d", eP[i].UnitID, k))
 				sDesc = strings.Replace(sDesc, `\n\n`, "\n", -1)
 				sDesc = strings.Replace(sDesc, `\n`, "\n", -1)
@@ -195,7 +202,9 @@ func Test1() {
 	} else {
 		t.WriteLog("Successful: Regulation/SkillDataTable.json Unmarshal to ExpectedGKSkill")
 	}
+	// for i := 0; i < len(eS); i++ {
 
+	// }
 }
 
 func Test2() {
@@ -216,6 +225,7 @@ func Test2() {
 	} else {
 		t.WriteLog("Successful: Regulation/SkillUpgradeDataTable.json Unmarshal to ExpectedGKSkillUpgrade")
 	}
-
-	// return eSU
+	for i := 0; i < len(eSU); i++ {
+		// loop through, set "Key": first value != "0"
+	}
 }
